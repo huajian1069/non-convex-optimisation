@@ -1,0 +1,8 @@
+name: non-convex
+channels:
+  - defaults
+dependencies:
+  - python=3.7.4
+  - numpy=1.17.4
+  - plotly=4.4.1
+  - matplotlib=3.1.3
