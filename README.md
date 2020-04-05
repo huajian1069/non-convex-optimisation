@@ -7,8 +7,7 @@
 A mathematical optimisation problem has the general form 
 
 <div align="center"> 
-  minimize <img src="/tex/0fa9bf28ae392aac505a4c724e25512a.svg?invert_in_darkmode&sanitize=true" align=middle width=37.60286804999999pt height=24.65753399999998pt/>
-  subject to <img src="/tex/270b4eb2f68275915504877111ac91dc.svg?invert_in_darkmode&sanitize=true" align=middle width=160.56214185pt height=24.65753399999998pt/>
+  <img src="/tex/99d80ffb29467a3d30c75625bfe4db4d.svg?invert_in_darkmode&sanitize=true" align=middle width=227.05129589999999pt height=47.671232400000015pt/>
 </div>
 
 One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
