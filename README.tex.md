@@ -58,7 +58,7 @@ week 6:
 - How does CMA-ES behave compared with other heuristic method? like particle swarm optimisation(PSO), Ant colony optimisation(ACO). Distributed Intelligent System on another repository is a good example to start.
 
 
-## feedback
+## Feedback
 Open to hear any voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request.
 
 I will keep on updating this repository during spring semester 2020. 
