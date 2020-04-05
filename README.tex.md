@@ -5,12 +5,18 @@
 
 ## Introduction
 A mathematical optimisation problem has the general form 
-minimize $f_0(x)$
-subject to $f_i(x) \leq b_i, i=1, ..., m.$
+
+<div align="center"> 
+  minimize $f_0(x)$
+  subject to $f_i(x) \leq b_i, i=1, ..., m.$
+</div>
 
 One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
-$\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]$
 
+<div align="center"> 
+$\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]$
+</div> 
+  
 With $\alpha + \beta = 1, \alpha, \beta \geq 0$. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
 
 Nevertheless, in the context of neural network training and computer version challenges, the objective function is almost always non-linear and non-convex. Traditional techniques for general non-convex problems involve compromises. Local optimisation methods, like gradient descent, provide no information about distance to global optimum. Global optimisation method has worst-case complexity growing exponentially with problem size. As the abstraction of real CV problems, we could assume the objective function is non-convex, differentiable, and there are no constraint functions. The pursuing of better optimisation method should be based on these assumptions. 
