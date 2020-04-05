@@ -22,32 +22,29 @@ In this project, I work on improving a global optimisation method-covariance mat
 Also, based on my previous background, the methodology used in this project relies more on getting insights of optimisation method by **visualization**. Works will be more based on coding, testing, numerical experiments rather than theoretical proof. But I will combine some theoretical reasoning when necessary.  
 
 ## Progress
-To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. $\href{https://en.wikipedia.org/wiki/Ackley_function}{Ackley}$  function is used in the first few weeks. Now I change to the other items on the $\href{https://www.sfu.ca/~ssurjano/optimization.html}{list}$.
+To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. [Ackley function](https://en.wikipedia.org/wiki/Ackley_function) is used in the first few weeks. Now I change to the other items on [the list](https://www.sfu.ca/~ssurjano/optimization.html).
 
 Week 1,2: 
-
-\item made some 2D scatter and 3D surface visualisation tools for Ackley function. 
-\item wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
-\item Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
+- made some 2D scatter and 3D surface visualisation tools for Ackley function. 
+- wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
+- Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
 
 Week 3,4:
-\item made animations about optimisation process: moving clusters of candidate parameters
-\item observed the round-off effect of line search, therefore add a round-off version of CMA-ES. It is not valuable by itself, but it indicates the strong relationship between local optimal and global optimal. Maybe there exist a large class of real problem where a similar relationship also exists. Then the optimisation problem will be cast to a noise-reducing problem. The key to solve this class of optimisation is to identify noise(often behaved in form of local optimal/high frequency part) and recover global information(often behaved as global optimal/low frequency part). I am still not sure how to identify the existence of this prior knowledge in objective function and how to take advantage of this inspiration. One potential way: Fourier transform.    
-\end{itemize}
+- made animations about optimisation process: moving clusters of candidate parameters
+- observed the round-off effect of line search, therefore add a round-off version of CMA-ES. It is not valuable by itself, but it indicates the strong relationship between local optimal and global optimal. Maybe there exist a large class of real problem where a similar relationship also exists. Then the optimisation problem will be cast to a noise-reducing problem. The key to solve this class of optimisation is to identify noise(often behaved in form of local optimal/high frequency part) and recover global information(often behaved as global optimal/low frequency part). I am still not sure how to identify the existence of this prior knowledge in objective function and how to take advantage of this inspiration. One potential way: Fourier transform.    
 
 week 5:
-
-\item added the visualisation of 2D normal distribution as ellipse
-\item refactored the code by class
-\item drawed the point cloud of global optimum convergence, first nice enough work to be included in final report 
+- added the visualisation of 2D normal distribution as ellipse
+- refactored the code by class
+- drawed the point cloud of global optimum convergence, first nice enough work to be included in final report 
 
 
 ## Schedule
 ### short term
 week 6:
-\item test more objective functions
-\item implement and test one-step line search CMA-ES
-\item plot grid plot of convergence
+- test more objective functions
+- implement and test one-step line search CMA-ES
+- plot grid plot of convergence
 
 
 ### long term
