@@ -5,38 +5,41 @@
 
 ## Introduction
 A mathematical optimisation problem has the general form 
-<img src="/tex/3a169c9f9865027eac8933023e9c119e.svg?invert_in_darkmode&sanitize=true" align=middle width=64.84037339999999pt height=39.45205439999997pt/>f_0(x)<img src="/tex/31de87f3a6027223e21eed2d9d8c170f.svg?invert_in_darkmode&sanitize=true" align=middle width=66.48915405pt height=45.84475499999998pt/>f_i(x) \leq b_i, i=1, ..., m.<img src="/tex/396da5880331120780464b0dfe5cc8bb.svg?invert_in_darkmode&sanitize=true" align=middle width=8.21920935pt height=14.15524440000002pt/>
-
-One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
-<img src="/tex/b2bb3b9d7da1e1b96c41a41142a0190e.svg?invert_in_darkmode&sanitize=true" align=middle width=309.00682559999996pt height=24.65753399999998pt/>
-
-With <p align="center"><img src="/tex/27f85ccdbe791f9cc4cc190a35062da9.svg?invert_in_darkmode&sanitize=true" align=middle width=136.46069909999997pt height=14.611878599999999pt/></p>. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
-
-Nevertheless, in the context of neural network training and computer version challenges, the objective function is almost always non-linear and non-convex. Traditional techniques for general non-convex problems involve compromises. Local optimisation methods, like gradient descent, provide no information about distance to global optimum. Global optimisation method has worst-case complexity growing exponentially with problem size. As the abstraction of real CV problems, we could assume the objective function is non-convex, differentiable, and there are no constraint functions. The pursuing of better optimisation method should be based on these assumptions. 
-
-In this project, I work on improving a global optimisation method-covariance matrix adaptation evolution strategy(CMA-ES) by exploiting <img src="/tex/67a588026a5bf4ad24406363e2332a8b.svg?invert_in_darkmode&sanitize=true" align=middle width=121.73456624999997pt height=22.831056599999986pt/>. Evolution strategies (ES) are stochastic, derivative-free methods for numerical optimization of non-convex continuous optimization problems. But it seems a pity that it ignores the built-in differentiablity of objective function in the context of neural network training. Therefore, the aim of this project is to integrate the information of gradient, find a better way to adjust the moving of particles in CMA-ES, get more guarantee of reaching global optimum with reasonable time cost. 
-
-Also, based on my previous background, the methodology used in this project relies more on getting insights of optimisation method by <img src="/tex/f6fd56b48d4eb1c2f8ff71646f46a533.svg?invert_in_darkmode&sanitize=true" align=middle width=103.02681675pt height=22.831056599999986pt/>. Works will be more based on coding, testing, numerical experiments rather than theoretical proof. But I will combine some theoretical reasoning when necessary.  
-
-<img src="/tex/312968c973c88ce62b535c234f1224e4.svg?invert_in_darkmode&sanitize=true" align=middle width=139.67950094999998pt height=117.92674409999996pt/>
-To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. <img src="/tex/08ca1db62f5a869305447893e11b13ed.svg?invert_in_darkmode&sanitize=true" align=middle width=401.82078749999994pt height=24.65753399999998pt/>  function is used in the first few weeks. Now I change to the other items on the <img src="/tex/8d02a4a7d91e85945be8f122716dd6de.svg?invert_in_darkmode&sanitize=true" align=middle width=403.39677344999996pt height=24.65753399999998pt/>.
+<img src="/tex/3a169c9f9865027eac8933023e9c119e.svg?invert_in_darkmode&sanitize=true" align=middle width=64.84037339999999pt height=39.45205439999997pt/>f_0(x)<img src="/tex/31de87f3a6027223e21eed2d9d8c170f.svg?invert_in_darkmode&sanitize=true" align=middle width=66.48915405pt height=45.84475499999998pt/>f_i(x) \leq b_i, i=1, ..., m.
+\end{flushleft}<img src="/tex/1af38fb0d8e5d62339c3d5afa030c86d.svg?invert_in_darkmode&sanitize=true" align=middle width=700.2745991999999pt height=85.29680939999997pt/>\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]<img src="/tex/25a29e4e63822d380f27033451c14bc0.svg?invert_in_darkmode&sanitize=true" align=middle width=20.091388349999992pt height=39.45205439999997pt/><img src="/tex/f7904a88553d63fbcf2f77ccc1b7b9f0.svg?invert_in_darkmode&sanitize=true" align=middle width=136.46069909999997pt height=22.831056599999986pt/><img src="/tex/91e60c833d1a915acc87680959e54753.svg?invert_in_darkmode&sanitize=true" align=middle width=858.3862847999999pt height=795.4337985pt/>\href{https://en.wikipedia.org/wiki/Ackley_function}{Ackley}<img src="/tex/d9beed8618f96b50b714f1ed2d961554.svg?invert_in_darkmode&sanitize=true" align=middle width=519.54883365pt height=22.831056599999986pt/>\href{https://www.sfu.ca/~ssurjano/optimization.html}{list}$.
 
 Week 1,2: 
 
-<p align="center"><img src="/tex/108f4057b9d7a355cd353ad7a3243290.svg?invert_in_darkmode&sanitize=true" align=middle width=675.84524535pt height=139.54338585pt/></p>
+\item made some 2D scatter and 3D surface visualisation tools for Ackley function. 
+\item wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
+\item Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
+
 Week 3,4:
-<p align="center"><img src="/tex/465c2235201bc4beaf1c530e8ead9f24.svg?invert_in_darkmode&sanitize=true" align=middle width=675.8452222499999pt height=202.10045955pt/></p>
+\item made animations about optimisation process: moving clusters of candidate parameters
+\item observed the round-off effect of line search, therefore add a round-off version of CMA-ES. It is not valuable by itself, but it indicates the strong relationship between local optimal and global optimal. Maybe there exist a large class of real problem where a similar relationship also exists. Then the optimisation problem will be cast to a noise-reducing problem. The key to solve this class of optimisation is to identify noise(often behaved in form of local optimal/high frequency part) and recover global information(often behaved as global optimal/low frequency part). I am still not sure how to identify the existence of this prior knowledge in objective function and how to take advantage of this inspiration. One potential way: Fourier transform.    
+\end{itemize}
 
 week 5:
-<p align="center"><img src="/tex/391adbb3d9e39253b9036bc954016de3.svg?invert_in_darkmode&sanitize=true" align=middle width=8.21920935pt height=6.39273195pt/></p>
+
+\item added the visualisation of 2D normal distribution as ellipse
+\item refactored the code by class
+\item drawed the point cloud of global optimum convergence, first nice enough work to be included in final report 
 
 
-\section{Schedule}
-\subsection{short term}
+## Schedule
+### short term
 week 6:
-<p align="center"><img src="/tex/391adbb3d9e39253b9036bc954016de3.svg?invert_in_darkmode&sanitize=true" align=middle width=8.21920935pt height=6.39273195pt/></p>
+\item test more objective functions
+\item implement and test one-step line search CMA-ES
+\item plot grid plot of convergence
 
-\subsection{long term}
+
+### long term
+- Look forward more theoerical guidance: read books and browse slides about convex optimisation. Easter holiday is a good chance to do this.
+- Also, I wonder how does anyone else tackle this problem, especially in context of neural network training. I should read some papers.
+- How does CMA-ES behave compared with other heuristic method? like particle swarm optimisation(PSO), Ant colony optimisation(ACO). Distributed Intelligent System on another repository is a good example to start.
 
 
-\end{document}
+## feedback
+Open to hear any voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request. I will keep on updating this repository during spring semester 2020. Anyway, it is assuring to share, to be open, to have a little influence in the world.
+
