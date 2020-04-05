@@ -1,3 +1,3 @@
 
 
-<p align="center"><img src="/tex/bd4d9e6b81ed8703a48a16ace93c55e6.svg?invert_in_darkmode&sanitize=true" align=middle width=1751.4387560999999pt height=26733.6985839pt/></p>
+<img src="/tex/64481d577fbbdedd4d462a61fba3d177.svg?invert_in_darkmode&sanitize=true" align=middle width=8.21920935pt height=14.15524440000002pt/>f_0(x)<img src="/tex/31de87f3a6027223e21eed2d9d8c170f.svg?invert_in_darkmode&sanitize=true" align=middle width=66.48915405pt height=45.84475499999998pt/>f_i(x) \leq b_i, i=1, ..., m.<img src="/tex/2d672d0263c2becc2116278f9c41b500.svg?invert_in_darkmode&sanitize=true" align=middle width=700.2746058pt height=184.10959050000002pt/>\alpha + \beta = 1, \alpha, \beta \geq 0<img src="/tex/2f5ec84c03b8bd1f34f59c0410fa5a1f.svg?invert_in_darkmode&sanitize=true" align=middle width=1751.4387560999999pt height=2356.3691646pt/>
