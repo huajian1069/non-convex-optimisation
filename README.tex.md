@@ -2,21 +2,6 @@
 
 \begin{document}
 
-\documentclass{article}
-\usepackage[utf8]{inputenc}
-\usepackage{amsmath,amsfonts,amsthm,amssymb}
-\usepackage{setspace}
-\usepackage{fancyhdr}
-\usepackage{lastpage}
-\usepackage{extramarks}
-\usepackage{chngpage}
-\usepackage{soul}
-\usepackage[usenames,dvipsnames]{color}
-\usepackage{graphicx,float,wrapfig}
-\usepackage{ifthen}
-\usepackage{listings}
-\usepackage{courier}
-\usepackage{hyperref}
 
 \title{non-convex optimisation: cma-es with gradients}
 \author{Huajian Qiu}
