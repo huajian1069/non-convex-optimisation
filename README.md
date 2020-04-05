@@ -7,9 +7,9 @@
 A mathematical optimisation problem has the general form 
 
 <div align="center"> 
-  minimize <img src="/tex/0fa9bf28ae392aac505a4c724e25512a.svg?invert_in_darkmode&sanitize=true" align=middle width=37.60286804999999pt height=24.65753399999998pt/> 
+  <img src="/tex/be634b6db0568ecfc1690c6c97b9c12a.svg?invert_in_darkmode&sanitize=true" align=middle width=71.74451294999999pt height=21.68300969999999pt/> <img src="/tex/0fa9bf28ae392aac505a4c724e25512a.svg?invert_in_darkmode&sanitize=true" align=middle width=37.60286804999999pt height=24.65753399999998pt/> 
   
-  subject to <img src="/tex/270b4eb2f68275915504877111ac91dc.svg?invert_in_darkmode&sanitize=true" align=middle width=160.56214185pt height=24.65753399999998pt/>
+  <img src="/tex/278aff1726c80c81045dae885284d374.svg?invert_in_darkmode&sanitize=true" align=middle width=52.58500664999998pt height=22.831056599999986pt/> <img src="/tex/187d4802a2a0ced2218fc4f1aeaf966d.svg?invert_in_darkmode&sanitize=true" align=middle width=13.90414904999999pt height=20.221802699999984pt/> <img src="/tex/270b4eb2f68275915504877111ac91dc.svg?invert_in_darkmode&sanitize=true" align=middle width=160.56214185pt height=24.65753399999998pt/>
 </div>
 
 One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
