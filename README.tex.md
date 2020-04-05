@@ -7,8 +7,8 @@
 A mathematical optimisation problem has the general form 
 
 <div align="center"> 
-  minimize $f_0(x)$
-  subject to $f_i(x) \leq b_i, i=1, ..., m.$
+  $minimize f_0(x) \\
+  subject to f_i(x) \leq b_i, i=1, ..., m.$
 </div>
 
 One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
