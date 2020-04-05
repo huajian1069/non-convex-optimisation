@@ -1,3 +1,7 @@
+
+
+\begin{document}
+
 \documentclass{article}
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath,amsfonts,amsthm,amssymb}
@@ -17,8 +21,6 @@
 \title{non-convex optimisation: cma-es with gradients}
 \author{Huajian Qiu}
 \date{April 2020}
-
-\begin{document}
 
 \maketitle
 
