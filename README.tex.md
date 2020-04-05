@@ -60,8 +60,6 @@ week 6:
 
 ## feedback
 Open to hear any voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request.
-
 I will keep on updating this repository during spring semester 2020. 
-
 Anyway, it is assuring to share, to be open, to have a little influence in the world.
 
