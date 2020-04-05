@@ -1,33 +1,28 @@
+# non-convex optimisation: cma-es with gradients
+#### Huajian Qiu
+#### April 2020
 
 
-$\begin{document}
-
-
-\title{non-convex optimisation: cma-es with gradients}
-\author{Huajian Qiu}
-\date{April 2020}
-
-\maketitle
-
-\section{Introduction}
+## Introduction
 A mathematical optimisation problem has the general form 
-\begin{flushleft}
+$\begin{flushleft}
 \hspace{4cm} minimize $f_0(x)$         \\
 \hspace{4cm} subject to $f_i(x) \leq b_i, i=1, ..., m.$
-\end{flushleft}
-One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
-\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]
+\end{flushleft}$
 
-With $\alpha + \beta = 1, \alpha, \beta \geq 0$. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
+One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
+$\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]$
+
+With $$\alpha + \beta = 1, \alpha, \beta \geq 0$$. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
 
 Nevertheless, in the context of neural network training and computer version challenges, the objective function is almost always non-linear and non-convex. Traditional techniques for general non-convex problems involve compromises. Local optimisation methods, like gradient descent, provide no information about distance to global optimum. Global optimisation method has worst-case complexity growing exponentially with problem size. As the abstraction of real CV problems, we could assume the objective function is non-convex, differentiable, and there are no constraint functions. The pursuing of better optimisation method should be based on these assumptions. 
 
-In this project, I work on improving a global optimisation method-covariance matrix adaptation evolution strategy(CMA-ES) by exploiting \textbf{differentiablity}. Evolution strategies (ES) are stochastic, derivative-free methods for numerical optimization of non-convex continuous optimization problems. But it seems a pity that it ignores the built-in differentiablity of objective function in the context of neural network training. Therefore, the aim of this project is to integrate the information of gradient, find a better way to adjust the moving of particles in CMA-ES, get more guarantee of reaching global optimum with reasonable time cost. 
+In this project, I work on improving a global optimisation method-covariance matrix adaptation evolution strategy(CMA-ES) by exploiting $\textbf{differentiablity}$. Evolution strategies (ES) are stochastic, derivative-free methods for numerical optimization of non-convex continuous optimization problems. But it seems a pity that it ignores the built-in differentiablity of objective function in the context of neural network training. Therefore, the aim of this project is to integrate the information of gradient, find a better way to adjust the moving of particles in CMA-ES, get more guarantee of reaching global optimum with reasonable time cost. 
 
-Also, based on my previous background, the methodology used in this project relies more on getting insights of optimisation method by \textbf{visualization}. Works will be more based on coding, testing, numerical experiments rather than theoretical proof. But I will combine some theoretical reasoning when necessary.  
+Also, based on my previous background, the methodology used in this project relies more on getting insights of optimisation method by $\textbf{visualization}$. Works will be more based on coding, testing, numerical experiments rather than theoretical proof. But I will combine some theoretical reasoning when necessary.  
 
-\section{Progress}
-To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. \href{https://en.wikipedia.org/wiki/Ackley_function}{Ackley}  function is used in the first few weeks. Now I change to the other items on the \href{https://www.sfu.ca/~ssurjano/optimization.html}{list}.
+$\section{Progress}$
+To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. $\href{https://en.wikipedia.org/wiki/Ackley_function}{Ackley}$  function is used in the first few weeks. Now I change to the other items on the $\href{https://www.sfu.ca/~ssurjano/optimization.html}{list}$.
 
 Week 1,2: 
 
@@ -59,4 +54,4 @@ week 6:
 \subsection{long term}
 
 
-\end{document}$
+\end{document}
