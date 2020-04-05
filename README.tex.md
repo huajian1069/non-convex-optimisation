@@ -1,6 +1,6 @@
 
 
-\begin{document}
+$\begin{document}
 
 
 \title{non-convex optimisation: cma-es with gradients}
@@ -59,4 +59,4 @@ week 6:
 \subsection{long term}
 
 
-\end{document}
+\end{document}$
