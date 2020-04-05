@@ -1,3 +1,3 @@
 
 
-<p align="center"><img src="/tex/252221c412913791f212cc095a7b68ce.svg?invert_in_darkmode&sanitize=true" align=middle width=700.2746371499999pt height=54.9771717pt/></p>
+<p align="center"><img src="/tex/bd4d9e6b81ed8703a48a16ace93c55e6.svg?invert_in_darkmode&sanitize=true" align=middle width=1751.4387560999999pt height=26733.6985839pt/></p>
