@@ -1,6 +1,12 @@
-def plot_distance(arg, val):
-    distance_arg = np.linalg.norm(arg, axis=(1,2))
-    distance_val = np.linalg.norm(val, axis=1)
+import matplotlib.pyplot as plt
+import numpy as np
+import matplotlib.animation as animation
+from matplotlib.patches import Ellipse
+from matplotlib import patches
+
+def plot_distance(arg, val, optimal, optimum):
+    distance_arg = np.linalg.norm(arg - optimal.reshape(1,1,2), axis=(1,2))
+    distance_val = np.linalg.norm(val - optimum, axis=1)
     fig = plt.figure(figsize=(8, 4))
     ax1=fig.add_subplot(1, 1, 1)
     ax1.plot(np.arange(val.shape[0]), distance_arg, color='green', label='Frobenius norm \nof parameters')
@@ -14,6 +20,8 @@ def plot_distance(arg, val):
     ax2.set_ylabel('distance in codomain', color='red', fontsize=15)
     ax2.tick_params(axis='y', labelcolor='red')
     ax2.legend(loc='upper right')
+    
+    
     
 def animate_moving_cluster(stats, num):
     def generate_points(stats, num):
@@ -52,12 +60,12 @@ def animate_moving_cluster(stats, num):
     plt.show()
     return ani
 
-def animate_scatterplot_distance(arg, val, stats):
+def animate_scatterplot_distance(arg, val, stats, optimal, optimum):
     arg_re = arg.reshape(-1, 2)
     x = np.array(arg_re[:,0])
     y = np.array(arg_re[:,1])
-    distance_val = np.linalg.norm(val, axis=1)
-    distance_arg = np.linalg.norm(arg, axis=(1,2))
+    distance_arg = np.linalg.norm(arg - optimal.reshape(1,1,2), axis=(1,2))
+    distance_val = np.linalg.norm(val - optimum, axis=1)
     eigVal_sqrts = np.linalg.norm(stats['var'], ord=2, axis=(1))
     def animate(i):
         plt.clf()
@@ -74,6 +82,7 @@ def animate_scatterplot_distance(arg, val, stats):
                              angle=-angle, linewidth=2, fill=False, zorder=2)
         ax0.add_patch(e1)
         ax0.scatter(mean[0], mean[1], c='black', s=15)
+        ax0.scatter(optimal[0], optimal[1], c='red', s=15)
         ax0.axvline(c='grey', lw=1)
         ax0.axhline(c='grey', lw=1)
         ax0.set_xlim(np.min(x),  np.max(x))

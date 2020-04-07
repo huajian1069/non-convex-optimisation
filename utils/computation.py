@@ -1,3 +1,5 @@
+import numpy as np
+
 def cma_es_general(mean0, D, alpha, beta, adjust, func, dfunc):
     '''
     @param mean0: initial mean of groups of points
