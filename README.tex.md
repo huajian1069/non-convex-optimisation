@@ -7,18 +7,18 @@
 A mathematical optimisation problem has the general form 
 
 <div align="center"> 
-  <img src="/tex/be634b6db0568ecfc1690c6c97b9c12a.svg?invert_in_darkmode&sanitize=true" align=middle width=71.74451294999999pt height=21.68300969999999pt/> <img src="/tex/0fa9bf28ae392aac505a4c724e25512a.svg?invert_in_darkmode&sanitize=true" align=middle width=37.60286804999999pt height=24.65753399999998pt/> 
+  $minimize$ $f_0(x)$ 
   
-  <img src="/tex/278aff1726c80c81045dae885284d374.svg?invert_in_darkmode&sanitize=true" align=middle width=52.58500664999998pt height=22.831056599999986pt/> <img src="/tex/187d4802a2a0ced2218fc4f1aeaf966d.svg?invert_in_darkmode&sanitize=true" align=middle width=13.90414904999999pt height=20.221802699999984pt/> <img src="/tex/270b4eb2f68275915504877111ac91dc.svg?invert_in_darkmode&sanitize=true" align=middle width=160.56214185pt height=24.65753399999998pt/>
+  $subject$ $to$ $f_i(x) \leq b_i, i=1, ..., m.$
 </div>
 
 One relative simple case with nice property is called convex optimisation problem, in which the objective and constraint functions are convex, which means they satisfy the inequality
 
 <div align="center"> 
-<img src="/tex/b2bb3b9d7da1e1b96c41a41142a0190e.svg?invert_in_darkmode&sanitize=true" align=middle width=309.00682559999996pt height=24.65753399999998pt/>
+$\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]$
 </div> 
   
-With <img src="/tex/f7904a88553d63fbcf2f77ccc1b7b9f0.svg?invert_in_darkmode&sanitize=true" align=middle width=136.46069909999997pt height=22.831056599999986pt/>. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
+With $\alpha + \beta = 1, \alpha, \beta \geq 0$. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
 
 Nevertheless, in the context of neural network training and computer version challenges, the objective function is almost always non-linear and non-convex. Traditional techniques for general non-convex problems involve compromises. Local optimisation methods, like gradient descent, provide no information about distance to global optimum. Global optimisation method has worst-case complexity growing exponentially with problem size. As the abstraction of real CV problems, we could assume the objective function is non-convex, differentiable, and there are no constraint functions. The pursuing of better optimisation method should be based on these assumptions. 
 
