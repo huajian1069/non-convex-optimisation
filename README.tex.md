@@ -33,6 +33,7 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Test on frist objective function: Ackley $$ f(x) = -a \exp \left\{ -b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\right\} - \exp\left\{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \right\} + a + e $$
 $$a = 20, b = 0.2, d = 2, c = 2 \pi$$ 
+
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
@@ -55,9 +56,8 @@ Test on frist objective function: Bukin $$ f(x) = 100 \sqrt{|x_2 - 0.01x_1^2|} +
 
 ## Schedule
 ### short term
-week 7:
-- test more objective functions
-- plot grid plot of convergence
+- [ ] test more objective functions
+- [ ] plot grid plot of convergence
 
 
 ### long term
@@ -75,8 +75,9 @@ Anyway, it is assuring to share, to be open, to have a little influence in the w
 
 ## Reference
 
-1. (CMA-ES)[https://en.wikipedia.org/wiki/CMA-ES]
-2. (Test Objective function)[https://www.sfu.ca/~ssurjano/optimization.html]
-3. (Convex Optimization – Boyd and Vandenberghe)[https://web.stanford.edu/~boyd/cvxbook/]
-4. (Particle Swarm Optimisation)[https://en.wikipedia.org/wiki/Particle_swarm_optimization]
-   (PSO appliction on robots project)[https://github.com/huajian1069/Distributed-Intelligent-System.git]
+1. CMA-ES [https://en.wikipedia.org/wiki/CMA-ES]
+2. Test Objective function [https://www.sfu.ca/~ssurjano/optimization.html]
+3. Convex Optimization – Boyd and Vandenberghe [https://web.stanford.edu/~boyd/cvxbook/]
+4. Particle Swarm Optimisation [https://en.wikipedia.org/wiki/Particle_swarm_optimization]
+
+   PSO appliction on robots project [https://github.com/huajian1069/Distributed-Intelligent-System.git]
