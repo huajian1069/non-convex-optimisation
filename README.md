@@ -33,6 +33,7 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Test on frist objective function: Ackley <p align="center"><img src="/tex/2c845cb1ef22d6396513f150f393e86c.svg?invert_in_darkmode&sanitize=true" align=middle width=463.08891255pt height=61.18323089999999pt/></p>
 <p align="center"><img src="/tex/c14c8c706ed095bf0da875a028ac6b6a.svg?invert_in_darkmode&sanitize=true" align=middle width=204.8434773pt height=14.611878599999999pt/></p> 
+
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
@@ -55,9 +56,8 @@ Test on frist objective function: Bukin <p align="center"><img src="/tex/dd0f5af
 
 ## Schedule
 ### short term
-week 7:
-- test more objective functions
-- plot grid plot of convergence
+- [ ] test more objective functions
+- [ ] plot grid plot of convergence
 
 
 ### long term
@@ -75,8 +75,9 @@ Anyway, it is assuring to share, to be open, to have a little influence in the w
 
 ## Reference
 
-1. (CMA-ES)[https://en.wikipedia.org/wiki/CMA-ES]
-2. (Test Objective function)[https://www.sfu.ca/~ssurjano/optimization.html]
-3. (Convex Optimization – Boyd and Vandenberghe)[https://web.stanford.edu/~boyd/cvxbook/]
-4. (Particle Swarm Optimisation)[https://en.wikipedia.org/wiki/Particle_swarm_optimization]
-   (PSO appliction on robots project)[https://github.com/huajian1069/Distributed-Intelligent-System.git]
+1. CMA-ES [https://en.wikipedia.org/wiki/CMA-ES]
+2. Test Objective function [https://www.sfu.ca/~ssurjano/optimization.html]
+3. Convex Optimization – Boyd and Vandenberghe [https://web.stanford.edu/~boyd/cvxbook/]
+4. Particle Swarm Optimisation [https://en.wikipedia.org/wiki/Particle_swarm_optimization]
+
+   PSO appliction on robots project [https://github.com/huajian1069/Distributed-Intelligent-System.git]
