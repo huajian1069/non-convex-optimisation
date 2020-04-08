@@ -29,7 +29,7 @@ Also, based on my previous background, the methodology used in this project reli
 ## Progress
 To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. [Ackley function](https://en.wikipedia.org/wiki/Ackley_function) is used in the first few weeks. Now I change to the other items on [the list](https://www.sfu.ca/~ssurjano/optimization.html).
 
-Week 1,2: 
+### Week 1,2: 
 
 Test on frist objective function: Ackley <p align="center"><img src="/tex/2c845cb1ef22d6396513f150f393e86c.svg?invert_in_darkmode&sanitize=true" align=middle width=463.08891255pt height=61.18323089999999pt/></p>
 <p align="center"><img src="/tex/c14c8c706ed095bf0da875a028ac6b6a.svg?invert_in_darkmode&sanitize=true" align=middle width=204.8434773pt height=14.611878599999999pt/></p> 
@@ -37,26 +37,26 @@ Test on frist objective function: Ackley <p align="center"><img src="/tex/2c845c
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
 
-Week 3,4:
+### Week 3,4:
 - made animations about optimisation process: moving clusters of candidate parameters
 - observed the round-off effect of line search, therefore add a round-off version of CMA-ES. It is not valuable by itself, but it indicates the strong relationship between local optimal and global optimal. Maybe there exist a large class of real problem where a similar relationship also exists. Then the optimisation problem will be cast to a noise-reducing problem. The key to solve this class of optimisation is to identify noise(often behaved in form of local optimal/high frequency part) and recover global information(often behaved as global optimal/low frequency part). I am still not sure how to identify the existence of this prior knowledge in objective function and how to take advantage of this inspiration. One potential way: Fourier transform.    
 
-week 5:
+### week 5:
 - added the visualisation of 2D normal distribution as ellipse
 - refactored the code by class
 - drawed the point cloud of global optimum convergence, first nice enough work to be included in final report 
 
-week 6:
+### week 6:
 
 Test on frist objective function: Bukin <p align="center"><img src="/tex/dd0f5af8038553aac782ebba8387135f.svg?invert_in_darkmode&sanitize=true" align=middle width=298.74434205pt height=29.58934275pt/></p>
 - studyed Bukin objective function. This is interesting. Becasuse the global minima is slightly smaller than the other points on the ridge, while the points on the ridge are much smaller than the other points outside the ridge. So it is difficult to move toward global minima along the ridge, especially given the fact the ridge is a parabolic curve and shape of CMA is elliptic. The great news is that line search with small step-size still improves the original CMA a lot.  
 - In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
+- Implemented one-step line search CMA-ES. It behaves more like original CMA-ES.
 
 ## Schedule
 ### short term
-week 6:
+week 7:
 - test more objective functions
-- implement and test one-step line search CMA-ES
 - plot grid plot of convergence
 
 
@@ -73,3 +73,10 @@ I will keep on updating this repository during spring semester 2020.
 
 Anyway, it is assuring to share, to be open, to have a little influence in the world.
 
+## Reference
+
+1. (CMA-ES)[https://en.wikipedia.org/wiki/CMA-ES]
+2. (Test Objective function)[https://www.sfu.ca/~ssurjano/optimization.html]
+3. (Convex Optimization – Boyd and Vandenberghe)[https://web.stanford.edu/~boyd/cvxbook/]
+4. (Particle Swarm Optimisation)[https://en.wikipedia.org/wiki/Particle_swarm_optimization]
+   (PSO appliction on robots project)[https://github.com/huajian1069/Distributed-Intelligent-System.git]
