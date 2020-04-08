@@ -50,6 +50,7 @@ $$a = 20, b = 0.2, d = 2, c = 2 \pi$$
 ### week 6:
 
 Test on frist objective function: Bukin $$ f(x) = 100 \sqrt{|x_2 - 0.01x_1^2|} + 0.01|x_1 + 10| $$
+It has some intractable properties, like indifferentiable along the ridge, global optimal located at one point on the ridge. Original CMA-ES and CMA-ES with line search can still directly apply to this case, with some careful tuning of hyperparameters, defining zero gradient at indifferentiable point. Original CMA-ES hardly converges to global optimal, most of time ends with stopping on ridge. CMA-ES with line search has more chance to diverge. But after adopting a very small initial step size, it can converge to global optimal in 40 out of 50 cases. So I think cma-es with line search still outperforms well in Bukin case.
 - studyed Bukin objective function. This is interesting. Becasuse the global minima is slightly smaller than the other points on the ridge, while the points on the ridge are much smaller than the other points outside the ridge. So it is difficult to move toward global minima along the ridge, especially given the fact the ridge is a parabolic curve and shape of CMA is elliptic. The great news is that line search with small step-size still improves the original CMA a lot.  
 - In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
 - Implemented one-step line search CMA-ES. It behaves more like original CMA-ES.
