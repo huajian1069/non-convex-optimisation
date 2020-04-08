@@ -31,7 +31,8 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Week 1,2: 
 
-Test on frist objective function: Ackley with $$a = 20, b = 0.2, d = 2, c = 2 \pi$$   $$ f(x) = -a exp\left{-b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\right} - exp\left{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \right} + a + e$$
+Test on frist objective function: Ackley $$ f(x) = -a \exp \Bigg{ -b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\Bigg} - \exp\Bigg{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \Bigg} + a + e $$
+$$with a = 20, b = 0.2, d = 2(two dimension), c = 2 \pi$$ 
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
@@ -47,7 +48,7 @@ week 5:
 
 week 6:
 
-Test on frist objective function: Bukin $$ f(x) = 100 \sqrt{|x_2 - 0.01x_1^2|} + 0.01\|x_1 + 10\| $$
+Test on frist objective function: Bukin $$ f(x) = 100 \sqrt{|x_2 - 0.01x_1^2|} + 0.01|x_1 + 10| $$
 - studyed Bukin objective function. This is interesting. Becasuse the global minima is slightly smaller than the other points on the ridge, while the points on the ridge are much smaller than the other points outside the ridge. So it is difficult to move toward global minima along the ridge, especially given the fact the ridge is a parabolic curve and shape of CMA is elliptic. The great news is that line search with small step-size still improves the original CMA a lot.  
 - In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
 
