@@ -31,8 +31,8 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Week 1,2: 
 
-Test on frist objective function: Ackley $$ f(x) = -a \exp \Bigg{ -b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\Bigg} - \exp\Bigg{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \Bigg} + a + e $$
-$$with a = 20, b = 0.2, d = 2(two dimension), c = 2 \pi$$ 
+Test on frist objective function: Ackley $$ f(x) = -a \exp \left\{ -b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\right\} - \exp\left\{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \right\} + a + e $$
+$$a = 20, b = 0.2, d = 2, c = 2 \pi$$ 
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
