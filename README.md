@@ -31,7 +31,8 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Week 1,2: 
 
-Test on frist objective function: Ackley with <p align="center"><img src="/tex/c14c8c706ed095bf0da875a028ac6b6a.svg?invert_in_darkmode&sanitize=true" align=middle width=204.8434773pt height=14.611878599999999pt/></p>   <p align="center"><img src="/tex/8aa10a9437d32d85d788b5eff3432af7.svg?invert_in_darkmode&sanitize=true" align=middle width=412.9426818pt height=59.17867724999999pt/></p>
+Test on frist objective function: Ackley <p align="center"><img src="/tex/5a5631c70354bea75aa1bc678003b5cc.svg?invert_in_darkmode&sanitize=true" align=middle width=103.2439584pt height=16.438356pt/></p>
+<p align="center"><img src="/tex/cecb26f623387e6e4ecb7653c103e95e.svg?invert_in_darkmode&sanitize=true" align=middle width=354.40212719999994pt height=16.438356pt/></p> 
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
@@ -47,7 +48,7 @@ week 5:
 
 week 6:
 
-Test on frist objective function: Bukin <p align="center"><img src="/tex/49c56b3759ca89b0ff42caecbd79a17d.svg?invert_in_darkmode&sanitize=true" align=middle width=306.0503127pt height=29.58934275pt/></p>
+Test on frist objective function: Bukin <p align="center"><img src="/tex/dd0f5af8038553aac782ebba8387135f.svg?invert_in_darkmode&sanitize=true" align=middle width=298.74434205pt height=29.58934275pt/></p>
 - studyed Bukin objective function. This is interesting. Becasuse the global minima is slightly smaller than the other points on the ridge, while the points on the ridge are much smaller than the other points outside the ridge. So it is difficult to move toward global minima along the ridge, especially given the fact the ridge is a parabolic curve and shape of CMA is elliptic. The great news is that line search with small step-size still improves the original CMA a lot.  
 - In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
 
