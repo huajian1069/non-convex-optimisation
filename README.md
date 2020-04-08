@@ -31,8 +31,8 @@ To simplify the development of new/improved optimisation method, we choose to be
 
 Week 1,2: 
 
-Test on frist objective function: Ackley <p align="center"><img src="/tex/5a5631c70354bea75aa1bc678003b5cc.svg?invert_in_darkmode&sanitize=true" align=middle width=103.2439584pt height=16.438356pt/></p>
-<p align="center"><img src="/tex/cecb26f623387e6e4ecb7653c103e95e.svg?invert_in_darkmode&sanitize=true" align=middle width=354.40212719999994pt height=16.438356pt/></p> 
+Test on frist objective function: Ackley <p align="center"><img src="/tex/2c845cb1ef22d6396513f150f393e86c.svg?invert_in_darkmode&sanitize=true" align=middle width=463.08891255pt height=61.18323089999999pt/></p>
+<p align="center"><img src="/tex/c14c8c706ed095bf0da875a028ac6b6a.svg?invert_in_darkmode&sanitize=true" align=middle width=204.8434773pt height=14.611878599999999pt/></p> 
 - made some 2D scatter and 3D surface visualisation tools for Ackley function. 
 - wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
 - Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
