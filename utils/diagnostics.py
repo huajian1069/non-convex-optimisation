@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.animation as animation
 from matplotlib.patches import Ellipse
 from matplotlib import patches
+from utils.computation import cma_es_general
+import seaborn as sns
 
 def get_distance(self):
     if np.any(self.distance_arg == None) or np.any(self.distance_val == None):
@@ -51,7 +53,7 @@ def generate_point_cloud(self, sigma, alpha, beta, adjust, points):
     self.points = points
     
     for i in range(self.num):
-        val, arg, stats = cma_es_general(self.points[i].reshape(2,1), sigma, alpha, beta, adjust, self.func, self.dfunc, self.optimal, self.optimum)
+        val, arg, stats = cma_es_general(self.points[i].reshape(2,1), sigma, alpha, beta, adjust, 1e-3, self.func, self.dfunc, self.optimal, self.optimum)
         if(stats['status'] == 'd'):
             self.res[i] = 1
         elif(stats['status'] == 'l'):
@@ -87,7 +89,7 @@ def plot_prob_vs_radius(self, *args):
         ax.plot(dis_ascendings[:,i], probs[:,i])
     plt.show()
     
-def plot_cloud_point(self):
+def plot_cloud_point(self, other_points=None, other_res=None):
     fig = plt.figure(figsize=(7,7))
     '''
     # one quadrant
@@ -107,3 +109,8 @@ def plot_cloud_point(self):
     y = self.points[:,1]
     hue = self.res
     p = sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)
+    if other_points != None and other_res != None:
+        x = other_points[:,0]
+        y = other_points[:,1]
+        hue = other_res
+        sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)

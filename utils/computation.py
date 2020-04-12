@@ -1,5 +1,5 @@
 import numpy as np
-def cma_es_general(mean0, D, alpha, beta, adjust, func, dfunc, optimal, optimum):
+def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
     '''
     @param mean0: the initial mean of candidates
     @param D: control the initial variance of candidates
@@ -32,12 +32,13 @@ def cma_es_general(mean0, D, alpha, beta, adjust, func, dfunc, optimal, optimum)
     mean = mean0
     sigma = 0.3
     D = D / sigma
-    tolerance = 1e-6
+    #tolerance = 1e-6
     max_iter = 400
     
     # Strategy parameter setting: Selection  
-    lambda_ = 4 + int(3 * np.log(dim))       # the size of solutions group
-    mu = int(lambda_ / 2)     # only best "mu" solutions are used to generate iterations
+    lambda_ = 4 + int(3 * np.log(dim)) if self.num == None else self.cluster_size   # the size of solutions group
+    mu = int(lambda_ / 2) if self.survival_size == None else self.survival_size
+                                                    # only best "mu" solutions are used to generate iterations
     weights = np.log(mu + 1/2) - np.log(np.arange(mu) + 1) 
     weights = weights / np.sum(weights)      # used to combine best "mu" solutions
     mueff = np.sum(weights)**2 / np.sum(weights**2) 
@@ -118,7 +119,7 @@ def cma_es_general(mean0, D, alpha, beta, adjust, func, dfunc, optimal, optimum)
 
             # check the stop condition
             if np.max(D) > (np.min(D) * 1e6) or np.linalg.norm(r_arg[-1] - r_arg[-2]) < tolerance \
-                        or np.linalg.norm(r_val[-1] - r_val[-2]) < tolerance:
+                or np.linalg.norm(r_val[-1] - r_val[-2]) < tolerance or np.linalg.norm(r_means[-1] - r_means[-2]) < tolerance:
                 break
     except np.linalg.LinAlgError as err:
             stats['status'] = 'd'
@@ -143,7 +144,9 @@ def cma_es_general(mean0, D, alpha, beta, adjust, func, dfunc, optimal, optimum)
     stats['mean'] = np.array(r_means)
     stats['var'] = np.array(r_vars)
     stats['x_adjust'] = np.array(r_x_adjust)
-    return np.array(r_val), np.array(r_arg), stats
+    self.status = status
+    self.val = np.array(r_val)
+    self.arg = np.array(r_arg)
 
 def line_search(x0, alpha, beta, f, deri_f):
     '''
