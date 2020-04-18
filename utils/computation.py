@@ -71,7 +71,7 @@ def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
     # initial data in record
     for i in range(lambda_):
         x[i] = (mean + np.random.randn(dim, 1)).ravel()
-        f[i] = func(x[i])
+        f[i] = self.func(x[i])
     idx = np.argsort(f)
     x_ascending = x[idx]
     r_arg.append(x_ascending)
@@ -89,8 +89,8 @@ def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
             for i in range(lambda_):
                 x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
                 x_old[i] = x[i]
-                x[i], eval_cnt = adjust(x[i], alpha, beta, func, dfunc)
-                f[i] = func(x[i])
+                x[i], eval_cnt = adjust(x[i], alpha, beta, self.func, self.dfunc)
+                f[i] = self.func(x[i])
                 eval_ += eval_cnt
                 iter_eval[i] = eval_cnt
             # sort the value and positions of solutions 
@@ -130,7 +130,7 @@ def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
                 or np.linalg.norm(mean) > (np.linalg.norm(mean0) * 1e2) or stats['status'] == 'd':
         print('diverge!!')
         stats['status'] = 'd'
-    elif np.linalg.norm(x - optimal) < 1e-1 or np.linalg.norm(f - optimum) < 1e-1:
+    elif np.linalg.norm(x - self.optimal) < 1e-1 or np.linalg.norm(f - self.optimum) < 1e-1:
         print('Global minimum')
         stats['status'] = 'g'
     else:
@@ -144,9 +144,7 @@ def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
     stats['mean'] = np.array(r_means)
     stats['var'] = np.array(r_vars)
     stats['x_adjust'] = np.array(r_x_adjust)
-    self.status = status
-    self.val = np.array(r_val)
-    self.arg = np.array(r_arg)
+    return np.array(r_val), np.array(r_arg), stats
 
 def line_search(x0, alpha, beta, f, deri_f):
     '''

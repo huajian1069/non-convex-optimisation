@@ -1,17 +1,18 @@
 from utils.computation import *
 from utils.diagnostics import *
 class non_convex_optimisation:
-    def __init__(objective_func):
+    def __init__(self, objective_func):
         self.func = objective_func.func
         self.dfunc = objective_func.dfunc
         self.optimal = objective_func.get_optimal()
         self.optimum = objective_func.get_optimum()
         self.distance_arg = None
         self.distance_val = None
-        self.trail = trail
+        self.num = None
+        self.survival_size = None
+        #self.trail = trail
     def do_experiments(self, mean0, D, alpha, beta, adjust, tolerance):
-            self.val, self.arg, self.stats = cma_es_general(mean0, D, alpha, beta, adjust, tolerance, \
-                                            self.func, self.dfunc, self.optimal, self.optimum)
+            self.val, self.arg, self.stats = cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance)
     def get_recorded_data(self):
         return self.val, self.arg, self.stats
     def get_results_points(self):
