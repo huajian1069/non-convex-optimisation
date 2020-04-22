@@ -28,11 +28,11 @@ def cma_es_general(self, mean0, D, alpha, beta, adjust, tolerance):
         # User defined input parameters (need to be edited)
     
     print("*******starting soon, intitial mean: ********\n", mean0)
+    
     dim = 2
     mean = mean0
     sigma = 0.3
     D = D / sigma
-    #tolerance = 1e-6
     max_iter = 400
     
     # Strategy parameter setting: Selection  
