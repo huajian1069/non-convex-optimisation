@@ -1,0 +1,259 @@
+import numpy as np
+from abc import ABC, abstractmethod
+
+class optimizer(ABC):
+    @abstractmethod
+    def set_parameters(self, para):
+        '''
+        input: parameters, in dictionary
+        '''
+        pass
+    @abstractmethod
+    def optimise(self, objective_cls):
+        '''
+        input: objective function class
+        output: empirical found optimal, optimum, and statistics of procedure information
+        '''
+        pass
+    
+class adjust_optimizer(optimizer):
+    def adjust(self, x0, obj):
+        self.x0 = x0
+        return self.optimise(obj)
+    
+class cma_es(optimizer):
+    def set_parameters(self, paras):
+        self.mean0 = paras['mean0'] 
+        self.std = paras['std']
+        self.tol = paras['tol']
+        self.adjust_func = paras['adjust_func']
+        self.max_iter = 400
+        # set none to use default value 
+        self.cluster_size = None
+        self.survival_size = None
+    def optimise(self, obj):
+        '''
+        @param obj: objective function class instance
+        return arg: found minimum arguments
+               val: found minimum value
+               stats: collection of recorded statistics for post-analysis
+        '''                  
+        def update_mean(x):
+            return (weights @ x).reshape(dim, 1)
+        def update_ps(ps, sigma, C, mean, mean_old):
+            return (1 - cs) * ps + np.sqrt(cs * (2 - cs) * mueff) * invsqrtC @ (mean - mean_old) / sigma 
+        def update_pc(pc, sigma, ps, mean, mean_old):
+            hsig = np.abs(ps) / np.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < 1.4 + 2/(dim + 1)
+            return (1 - cc) * pc + hsig * np.sqrt(cc * (2 - cc) * mueff) * (mean - mean_old) / sigma
+        def update_C(C, pc, x, mean_old, sigma):
+            hsig = np.abs(ps) / np.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < 1.4 + 2/(dim + 1)
+            artmp = (1 / sigma) * (x - mean_old.reshape(1, dim))
+            return (1 - c1 - cmu) * C + c1 * (pc * pc.T + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.T @ np.diag(weights) @ artmp
+        def update_sigma(sigma, ps):
+            return sigma * np.exp((cs / damps) * (np.linalg.norm(ps)/ chiN - 1))
+        def not_moving(stats, tol):
+            return np.linalg.norm(stats['arg'][-1] - stats['arg'][-2]) < tol \
+                or np.linalg.norm(stats['val'][-1] - stats['val'][-2]) < tol \
+                or np.linalg.norm(stats['mean'][-1] - stats['mean'][-2]) < tol    
+
+        print("*******starting optimisation from intitial mean: ", self.mean0.ravel())
+        # User defined input parameters 
+        dim = 2    
+        sigma = 0.3
+        D = self.std / sigma
+        mean = self.mean0
+
+        # the size of solutions group
+        lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
+        # only best "mu" solutions are used to generate iterations
+        mu = int(lambda_ / 2) if self.survival_size == None else self.survival_size
+        # used to combine best "mu" solutions                                               
+        weights = np.log(mu + 1/2) - np.log(np.arange(mu) + 1) 
+        weights = weights / np.sum(weights)     
+        mueff = np.sum(weights)**2 / np.sum(weights**2) 
+
+        # Strategy parameter setting: Adaptation
+        # time constant for cumulation for C
+        cc = (4 + mueff / dim) / (dim + 4 + 2 * mueff / dim)  
+        # t-const for cumulation for sigma control
+        cs = (mueff + 2) / (dim + mueff + 5)  
+        # learning rate for rank-one update of C
+        c1 = 2 / ((dim + 1.3)**2 + mueff)    
+        # and for rank-mu update
+        cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2)**2 + mueff))  
+        # damping for sigma, usually close to 1  
+        damps = 1 + 2 * max(0, np.sqrt((mueff - 1)/( dim + 1)) - 1) + cs                                                                 
+
+        # Initialize dynamic (internal) strategy parameters and constants
+        # evolution paths for C and sigma
+        pc = np.zeros((dim, 1))     
+        ps = np.zeros((dim, 1)) 
+        # B defines the coordinate system
+        B = np.eye(dim)       
+        # covariance matrix C
+        C = B * np.diag(D**2) * B.T 
+        # C^-1/2 
+        invsqrtC = B * np.diag(D**-1) * B.T   
+        # expectation of ||N(0,I)|| == norm(randn(N,1)) 
+        chiN = dim**0.5 * (1 - 1/(4 * dim) + 1 / (21 * dim**2))  
+
+        # --------------------  Initialization --------------------------------  
+        x, x_old, f = np.zeros((lambda_, dim)), np.zeros((lambda_, dim)), np.zeros((lambda_,))
+        stats = {}
+        stats['val'], stats['arg'] = [], []
+        stats['x_adjust'] = []
+        iter_eval, stats['evals_per_iter'] = np.zeros((lambda_, )), []
+        stats['mean'], stats['std'] = [], []
+        iter_, eval_ = 0, 0
+
+        # initial data in record
+        for i in range(lambda_):
+            x[i] = (mean + np.random.randn(dim, 1)).ravel()
+            f[i] = obj.func(x[i])
+        idx = np.argsort(f)
+        x_ascending = x[idx]
+        stats['arg'].append(x_ascending)
+        stats['val'].append(f[idx])
+        stats['mean'].append(mean)
+        stats['std'].append(sigma * B @ np.diag(D))
+        stats['evals_per_iter'].append(np.ones((lambda_,)))
+        stats['x_adjust'].append(np.vstack((x.T.copy(), x.T.copy())))
+
+        # optimise by iterations
+        try:
+            while iter_ < self.max_iter:
+                iter_ += 1
+                # generate candidate solutions with some stochastic elements
+                for i in range(lambda_):
+                    x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
+                    x_old[i] = x[i]
+                    x[i], eval_cnt = self.adjust_func.adjust(x[i], obj)
+                    f[i] = obj.func(x[i])
+                    eval_ += eval_cnt
+                    iter_eval[i] = eval_cnt
+                # sort the value and positions of solutions 
+                idx = np.argsort(f)
+                x_ascending = x[idx]
+
+                # update the parameter for next iteration
+                mean_old = mean
+                mean = update_mean(x_ascending[:mu])
+                ps =   update_ps(ps, sigma, C, mean, mean_old)
+                pc =   update_pc(pc, sigma, ps, mean, mean_old)
+                sigma = update_sigma(sigma, ps)
+                C =    update_C(C, pc, x_ascending[:mu], mean_old, sigma)
+                C = np.triu(C) + np.triu(C, 1).T
+                D, B = np.linalg.eig(C)
+                D = np.sqrt(D)
+                invsqrtC = B @ np.diag(D**-1) @ B
+
+                # record data during process for post analysis
+                stats['arg'].append(x_ascending)
+                stats['val'].append(f[idx])
+                stats['mean'].append(mean)
+                stats['std'].append(sigma * B @ np.diag(D))
+                stats['evals_per_iter'].append(iter_eval.copy())
+                stats['x_adjust'].append(np.vstack((x_old.T.copy(), x.T.copy())))
+
+                # check the stop condition
+                if np.max(D) > (np.min(D) * 1e6):
+                    stats['status'] = 'diverge'
+                    print('diverge, concentrate in low dimension manifold')
+                    break
+                if not_moving(stats, self.tol) :
+                    break   
+        except np.linalg.LinAlgError as err:
+            stats['status'] = 'diverge'
+            print('diverge, raise LinAlgError!')
+        finally:
+            print('eigenvalue of variance = {}'.format(D))
+            print('min = {}, total iterations = {}, total evaluatios = {}\n position = {} {}\n'.format(f[0], iter_, eval_, x_ascending[0, 0], x_ascending[0, 1]))
+
+        # carry statistics info before quit
+        stats['arg'] = np.array(stats['arg'])
+        stats['val'] = np.array(stats['val'])
+        stats['mean'] = np.array(stats['mean'])
+        stats['std'] = np.array(stats['std'])
+        stats['evals_per_iter'] = np.array(stats['evals_per_iter'])
+        stats['x_adjust'] = np.array(stats['x_adjust'])
+        return stats['arg'][-1][0], stats['val'][-1][0], stats
+    
+    
+class do_nothing(adjust_optimizer):
+    def set_parameters(self, paras):
+        return None
+    def optimise(self, obj):
+        return self.x0, 1
+    
+class round_off(adjust_optimizer):
+    def set_parameters(self, paras):
+        pass
+    def optimise(self, obj):
+        return np.round(self.x0), 1
+    
+class line_search(adjust_optimizer):
+    def __init__(self, alpha, beta):
+        self.alpha = alpha
+        self.beta = beta
+        self.max_iter = 4
+        self.tol = 1e-2
+    def set_parameters(self, paras):
+        self.alpha = paras['alpha']
+        self.beta = paras['beta']
+        self.max_iter = paras['max_iter']
+        self.tol = paras['tol']
+    def optimise(self, obj):
+        '''
+        @param x0: initial point position
+        @param alpha: initial step size
+        @param beta: control the armijo condition
+        @return x: point position after moving to local minimum
+        '''
+        x = self.x0.copy()
+        tao = 0.5
+        fx = obj.func(x)
+        p = - obj.dfunc(x)
+        fnx = obj.func(x + self.alpha * p)
+        eval_cnt = 4
+        for k in range(self.max_iter):
+            while fnx > fx + self.alpha * self.beta * (-p @ p):
+                alpha *= tao
+                fnx = obj.func(x + self.alpha * p)
+                eval_cnt += 1
+            x += self.alpha * p
+            fx = fnx
+            p = -obj.dfunc(x)
+            fnx = obj.func(x + self.alpha * p)
+            eval_cnt += 2
+            if np.linalg.norm(p) < self.tol:
+                break
+        return x, eval_cnt
+
+class line_search_1step(adjust_optimizer):
+    def __init__(self, alpha, beta):
+        self.alpha = alpha
+        self.beta = beta
+        self.max_iter = 4
+        self.tol = 1e-2
+    def set_parameters(self, paras):
+        self.alpha = paras['alpha']
+        self.beta = paras['beta']
+        self.max_iter = paras['max_iter']
+        self.tol = paras['tol']
+    def optimiser(self, obj):
+        '''
+        @param x0: initial point position
+        @param alpha: initial step size
+        @param beta: control the armijo condition
+        @return x: point position after moving to local minimum
+        '''
+        x = self.x0.copy()
+        tao = 0.5
+        fx = obj.func(x)
+        p = - obj.dfunc(x)
+        eval_cnt = 4
+        while obj.func(x + self.alpha * p) > fx + self.alpha * self.beta * (-p @ p):
+            self.alpha *= tao
+            eval_cnt += 1
+        x += self.alpha * p
+        return x, eval_cnt
