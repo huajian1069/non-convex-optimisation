@@ -21,28 +21,41 @@ class adjust_optimizer(optimizer):
         self.x0 = x0
         return self.optimise(obj)
     
-import numpy as np
-from abc import ABC, abstractmethod
-
-class optimizer(ABC):
-    @abstractmethod
-    def set_parameters(self, para):
-        '''
-        input: parameters, in dictionary
-        '''
-        pass
-    @abstractmethod
-    def optimise(self, objective_cls):
-        '''
-        input: objective function class
-        output: empirical found optimal, optimum, and statistics of procedure information
-        '''
-        pass
-    
-class adjust_optimizer(optimizer):
-    def adjust(self, x0, obj):
-        self.x0 = x0
-        return self.optimise(obj)
+class adam(optimizer):
+    def __init__(self):
+        self.alpha = 0.01
+        self.beta_1 = 0.9
+        self.beta_2 = 0.999
+        self.epsilon = 1e-8
+        self.max_iter = 10000
+        self.tol = 1e-2
+        
+    def set_parameters(self, paras):
+        self.x0 = paras['x0']
+        self.alpha = paras['alpha']
+        self.beta_1 = paras['beta_1']
+        self.beta_2 = paras['beta_2']
+        self.epsilon = paras['epsilon']
+        self.max_iter = paras['max_iter']
+        self.tol = paras['tol']
+        
+    def optimise(self, obj):
+        m_t = 0 
+        v_t = 0 
+        t = 0
+        x = self.x0
+        while t < self.max_iter:					#till it gets converged
+            t+=1
+            g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
+            m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
+            v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
+            m_cap = m_t/(1-(self.beta_1**t))		#calculates the bias-corrected estimates
+            v_cap = v_t/(1-(self.beta_2**t))		#calculates the bias-corrected estimates
+            x_prev = x								
+            x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
+            if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
+                break
+        return x, t
     
 class cma_es(optimizer):
     def set_parameters(self, paras):
@@ -54,7 +67,7 @@ class cma_es(optimizer):
         # set none to use default value 
         self.cluster_size = None if 'cluster_size' not in paras.keys() else paras['cluster_size']
         self.survival_size = None if 'survival_size' not in paras.keys() else paras['survival_size']
-        self.record = True if 'multi_runs' not in paras.keys() else paras['multi_runs']
+        self.record = True if 'record' not in paras.keys() else paras['record']
     def optimise(self, obj):
         '''
         @param obj: objective function class instance
@@ -219,12 +232,13 @@ class round_off(adjust_optimizer):
         return np.round(self.x0), 1
     
 class line_search(adjust_optimizer):
-    def __init__(self, alpha, beta):
+    def __init__(self, alpha=1, beta=0.1):
         self.alpha = alpha
         self.beta = beta
-        self.max_iter = 4
+        self.max_iter = 100
         self.tol = 1e-2
     def set_parameters(self, paras):
+        self.x0 = None if 'x0' not in paras.keys() else paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
@@ -236,51 +250,54 @@ class line_search(adjust_optimizer):
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0.copy()
+        x = self.x0.copy().reshape(2,)
+        alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
         p = - obj.dfunc(x)
-        fnx = obj.func(x + self.alpha * p)
+        fnx = obj.func(x + alpha_ * p)
         eval_cnt = 4
         for k in range(self.max_iter):
-            while fnx > fx + self.alpha * self.beta * (-p @ p):
-                alpha *= tao
-                fnx = obj.func(x + self.alpha * p)
+            while fnx > fx + alpha_ * self.beta * (-p @ p):
+                alpha_ *= tao
+                fnx = obj.func(x + alpha_ * p)
                 eval_cnt += 1
-            x += self.alpha * p
+            x += alpha_ * p
             fx = fnx
             p = -obj.dfunc(x)
-            fnx = obj.func(x + self.alpha * p)
+            fnx = obj.func(x + alpha_ * p)
             eval_cnt += 2
             if np.linalg.norm(p) < self.tol:
                 break
         return x, eval_cnt
 
 class line_search_1step(adjust_optimizer):
-    def __init__(self, alpha, beta):
+    def __init__(self, alpha=1, beta=0.1):
         self.alpha = alpha
         self.beta = beta
         self.max_iter = 4
         self.tol = 1e-2
     def set_parameters(self, paras):
+        self.x0 = None if 'x0' not in paras.keys() else paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
-    def optimiser(self, obj):
+    def optimise(self, obj):
         '''
         @param x0: initial point position
         @param alpha: initial step size
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0.copy()
+        x = self.x0.copy().reshape(2,)
+        alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
         p = - obj.dfunc(x)
         eval_cnt = 4
-        while obj.func(x + self.alpha * p) > fx + self.alpha * self.beta * (-p @ p):
-            self.alpha *= tao
+        while obj.func(x + alpha_ * p) > fx + alpha_ * self.beta * (-p @ p):
+            alpha_ *= tao
             eval_cnt += 1
-        x += self.alpha * p
+        x += alpha_ * p
         return x, eval_cnt
