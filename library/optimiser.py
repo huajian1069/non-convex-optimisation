@@ -21,6 +21,29 @@ class adjust_optimizer(optimizer):
         self.x0 = x0
         return self.optimise(obj)
     
+import numpy as np
+from abc import ABC, abstractmethod
+
+class optimizer(ABC):
+    @abstractmethod
+    def set_parameters(self, para):
+        '''
+        input: parameters, in dictionary
+        '''
+        pass
+    @abstractmethod
+    def optimise(self, objective_cls):
+        '''
+        input: objective function class
+        output: empirical found optimal, optimum, and statistics of procedure information
+        '''
+        pass
+    
+class adjust_optimizer(optimizer):
+    def adjust(self, x0, obj):
+        self.x0 = x0
+        return self.optimise(obj)
+    
 class cma_es(optimizer):
     def set_parameters(self, paras):
         self.mean0 = paras['mean0'] 
@@ -29,8 +52,9 @@ class cma_es(optimizer):
         self.adjust_func = paras['adjust_func']
         self.max_iter = 400
         # set none to use default value 
-        self.cluster_size = None
-        self.survival_size = None
+        self.cluster_size = None if 'cluster_size' not in paras.keys() else paras['cluster_size']
+        self.survival_size = None if 'survival_size' not in paras.keys() else paras['survival_size']
+        self.record = True if 'multi_runs' not in paras.keys() else paras['multi_runs']
     def optimise(self, obj):
         '''
         @param obj: objective function class instance
@@ -52,9 +76,9 @@ class cma_es(optimizer):
         def update_sigma(sigma, ps):
             return sigma * np.exp((cs / damps) * (np.linalg.norm(ps)/ chiN - 1))
         def not_moving(stats, tol):
-            return np.linalg.norm(stats['arg'][-1] - stats['arg'][-2]) < tol \
-                or np.linalg.norm(stats['val'][-1] - stats['val'][-2]) < tol \
-                or np.linalg.norm(stats['mean'][-1] - stats['mean'][-2]) < tol    
+            dis_arg = np.linalg.norm(stats['arg'][-1] - stats['arg'][-2])
+            dis_val = np.linalg.norm(stats['val'][-1] - stats['val'][-2])
+            return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
 
         print("*******starting optimisation from intitial mean: ", self.mean0.ravel())
         # User defined input parameters 
@@ -104,6 +128,7 @@ class cma_es(optimizer):
         stats['x_adjust'] = []
         iter_eval, stats['evals_per_iter'] = np.zeros((lambda_, )), []
         stats['mean'], stats['std'] = [], []
+        stats['status'] = None
         iter_, eval_ = 0, 0
 
         # initial data in record
@@ -123,6 +148,7 @@ class cma_es(optimizer):
         try:
             while iter_ < self.max_iter:
                 iter_ += 1
+                
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
@@ -148,13 +174,14 @@ class cma_es(optimizer):
                 invsqrtC = B @ np.diag(D**-1) @ B
 
                 # record data during process for post analysis
-                stats['arg'].append(x_ascending)
-                stats['val'].append(f[idx])
-                stats['mean'].append(mean)
-                stats['std'].append(sigma * B @ np.diag(D))
-                stats['evals_per_iter'].append(iter_eval.copy())
-                stats['x_adjust'].append(np.vstack((x_old.T.copy(), x.T.copy())))
-
+                if self.record == True:
+                    stats['arg'].append(x_ascending)
+                    stats['val'].append(f[idx])
+                    stats['mean'].append(mean)
+                    stats['std'].append(sigma * B @ np.diag(D))
+                    stats['evals_per_iter'].append(iter_eval.copy())
+                    stats['x_adjust'].append(np.vstack((x_old.T.copy(), x.T.copy())))
+                    
                 # check the stop condition
                 if np.max(D) > (np.min(D) * 1e6):
                     stats['status'] = 'diverge'
@@ -167,7 +194,8 @@ class cma_es(optimizer):
             print('diverge, raise LinAlgError!')
         finally:
             print('eigenvalue of variance = {}'.format(D))
-            print('min = {}, total iterations = {}, total evaluatios = {}\n position = {} {}\n'.format(f[0], iter_, eval_, x_ascending[0, 0], x_ascending[0, 1]))
+            print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
+            print('found minimum position = {}, found minimum = {}'.format(stats['arg'][-1][0], stats['val'][-1][0]))
 
         # carry statistics info before quit
         stats['arg'] = np.array(stats['arg'])
@@ -177,7 +205,6 @@ class cma_es(optimizer):
         stats['evals_per_iter'] = np.array(stats['evals_per_iter'])
         stats['x_adjust'] = np.array(stats['x_adjust'])
         return stats['arg'][-1][0], stats['val'][-1][0], stats
-    
     
 class do_nothing(adjust_optimizer):
     def set_parameters(self, paras):

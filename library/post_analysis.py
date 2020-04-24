@@ -31,6 +31,24 @@ class post_analysis():
         fig = plt.figure(figsize=(8, 4))
         ax1 = fig.add_subplot(1, 1, 1)
         self.__plot_distance_common(ax1, self.stats['val'].shape[0]-1)
+    
+    def plot_moving_cluster(self):
+        fig = plt.figure(figsize=(9, 9))
+        row = col = 3
+        unit = int(self.stats['val'].shape[0]/(row * col)/2)
+        for i in range(row):
+            for j in range(col):
+                ax=fig.add_subplot(row, col, 1 + row * i + j)
+                # draw x-axis and y-axis
+                ax.axvline(c='grey', lw=1)
+                ax.axhline(c='grey', lw=1)
+                # draw the position of optimal 
+                ax.scatter(self.obj.get_optimal()[0], self.obj.get_optimal()[1], c='red', s=15)
+                ax.scatter(x=self.stats['arg'][unit * (row * i + j),:,0], y=self.stats['arg'][unit * (row * i + j),:,1], 
+                           c=self.stats['val'][unit * (row * i + j)], vmin = 0, vmax = 10)
+                ax.set_title("%d / %d"%(unit * (row * i + j), self.stats['arg'].shape[0]))
+                plt.xlim([-4, 4])
+                plt.ylim([-4, 4])
 
     def __plot_distance_common(self, ax1, i):
         ax1.plot(np.arange(i), self.distance_arg[1:i+1], color='green', label='Frobenius norm \nof parameters')
