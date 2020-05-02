@@ -68,6 +68,7 @@ class cma_es(optimizer):
         self.cluster_size = None if 'cluster_size' not in paras.keys() else paras['cluster_size']
         self.survival_size = None if 'survival_size' not in paras.keys() else paras['survival_size']
         self.record = True if 'record' not in paras.keys() else paras['record']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
     def optimise(self, obj):
         '''
         @param obj: objective function class instance
@@ -93,7 +94,8 @@ class cma_es(optimizer):
             dis_val = np.linalg.norm(stats['val'][-1] - stats['val'][-2])
             return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
 
-        print("*******starting optimisation from intitial mean: ", self.mean0.ravel())
+        if self.verbose:
+            print("*******starting optimisation from intitial mean: ", self.mean0.ravel())
         # User defined input parameters 
         dim = 2    
         sigma = 0.3
@@ -145,17 +147,18 @@ class cma_es(optimizer):
         iter_, eval_ = 0, 0
 
         # initial data in record
-        for i in range(lambda_):
-            x[i] = (mean + np.random.randn(dim, 1)).ravel()
-            f[i] = obj.func(x[i])
-        idx = np.argsort(f)
-        x_ascending = x[idx]
-        stats['arg'].append(x_ascending)
-        stats['val'].append(f[idx])
-        stats['mean'].append(mean)
-        stats['std'].append(sigma * B @ np.diag(D))
-        stats['evals_per_iter'].append(np.ones((lambda_,)))
-        stats['x_adjust'].append(np.vstack((x.T.copy(), x.T.copy())))
+        if self.record:
+            for i in range(lambda_):
+                x[i] = (mean + np.random.randn(dim, 1)).ravel()
+                f[i] = obj.func(x[i])
+            idx = np.argsort(f)
+            x_ascending = x[idx]
+            stats['arg'].append(x_ascending)
+            stats['val'].append(f[idx])
+            stats['mean'].append(mean)
+            stats['std'].append(sigma * B @ np.diag(D))
+            stats['evals_per_iter'].append(np.ones((lambda_,)))
+            stats['x_adjust'].append(np.vstack((x.T.copy(), x.T.copy())))
 
         # optimise by iterations
         try:
@@ -206,9 +209,10 @@ class cma_es(optimizer):
             stats['status'] = 'diverge'
             print('diverge, raise LinAlgError!')
         finally:
-            print('eigenvalue of variance = {}'.format(D))
-            print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
-            print('found minimum position = {}, found minimum = {}'.format(stats['arg'][-1][0], stats['val'][-1][0]))
+            if self.verbose:
+                print('eigenvalue of variance = {}'.format(D))
+                print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
+                print('found minimum position = {}, found minimum = {}'.format(stats['arg'][-1][0], stats['val'][-1][0]))
 
         # carry statistics info before quit
         stats['arg'] = np.array(stats['arg'])
