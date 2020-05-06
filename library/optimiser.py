@@ -31,6 +31,7 @@ class adam(optimizer):
         self.tol = 1e-2
         
     def set_parameters(self, paras):
+        self.paras = paras
         self.x0 = paras['x0']
         self.alpha = paras['alpha']
         self.beta_1 = paras['beta_1']
@@ -59,6 +60,7 @@ class adam(optimizer):
     
 class cma_es(optimizer):
     def set_parameters(self, paras):
+        self.paras = paras
         self.mean0 = paras['mean0'] 
         self.std = paras['std']
         self.tol = paras['tol']
@@ -242,6 +244,7 @@ class line_search(adjust_optimizer):
         self.max_iter = 100
         self.tol = 1e-2
     def set_parameters(self, paras):
+        self.paras = paras
         self.x0 = None if 'x0' not in paras.keys() else paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
@@ -282,6 +285,7 @@ class line_search_1step(adjust_optimizer):
         self.max_iter = 4
         self.tol = 1e-2
     def set_parameters(self, paras):
+        self.paras = paras
         self.x0 = None if 'x0' not in paras.keys() else paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
