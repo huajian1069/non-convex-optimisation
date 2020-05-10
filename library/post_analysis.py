@@ -5,7 +5,7 @@ from matplotlib.patches import Ellipse
 from matplotlib import patches
 import seaborn as sns
 
-class post_analysis_multi():
+class post_analysis_multiple_cloud():
     def __init__(self, points, res):
         self.points = points
         self.res = res
@@ -59,6 +59,44 @@ class post_analysis_multi():
         hue = self.res
         p = sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)
 
+class post_analysis_multiple:
+    def __init__(self, paras, data):
+        self.paras = paras
+        self.origin = paras['origin']
+        self.edge = paras['edge']
+        self.step = paras['step']
+        self.size = paras['size']
+        self.sym = paras['sym'] if 'sym' in self.paras.keys() else False
+        
+        self.x = data['x']
+        self.y = data['y']
+        self.prob = data['res']
+        self.cost = data['cost']
+        self.evals = data['evals']
+        self.mask = data['mask']
+    def plot_scatter(self):
+        fig = plt.figure(figsize=(10,10))
+        sc = plt.scatter(self.x.ravel(), self.y.ravel(), c=self.prob.ravel(), marker='o', vmin=0, vmax=1, s=35, cmap='YlGnBu')
+        plt.colorbar(sc)
+    def plot_hotmap_prob(self):
+        with sns.axes_style("white"):
+            fig = plt.figure(figsize=(13, 13))
+            ax = sns.heatmap(self.prob, mask=self.mask, vmin=0, vmax=1, square=True,  cmap="YlGnBu")
+            ax.set_xticklabels(np.arange(self.origin[0], self.origin[0] + self.edge[0], self.step) + round(self.step/2))
+            ax.set_yticklabels(np.arange(self.edge[1] + self.origin[1], self.origin[1], -self.step) - round(self.step/2))
+    def plot_hotmap_cost(self):
+        with sns.axes_style("white"):
+            fig = plt.figure(figsize=(13, 13))
+            ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")
+            ax.set_xticklabels(np.arange(self.origin[0], self.origin[0] + self.edge[0], self.step) + round(self.step/2))
+            ax.set_yticklabels(np.arange(self.edge[1] + self.origin[1], self.origin[1], -self.step) - round(self.step/2))
+    def plot_hotmap_evals(self):
+        with sns.axes_style("white"):
+            fig = plt.figure(figsize=(13, 13))
+            ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")
+            ax.set_xticklabels(np.arange(self.origin[0], self.origin[0] + self.edge[0], self.step) + round(self.step/2))
+            ax.set_yticklabels(np.arange(self.edge[1] + self.origin[1], self.origin[1], -self.step) - round(self.step/2))        
+        
 class post_analysis():
     def __init__(self, stats, obj):
         self.stats = stats

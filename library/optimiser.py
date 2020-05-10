@@ -256,7 +256,7 @@ class round_off(adjust_optimizer):
         self.stats['status'] = None
         self.stats['evals'] = 1
     def set_parameters(self, paras):
-        pass
+        return None
     def optimise(self, obj):
         return np.round(self.x0), None, self.stats
     
