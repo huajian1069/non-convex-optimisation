@@ -19,7 +19,8 @@ class optimizer(ABC):
 class adjust_optimizer(optimizer):
     def adjust(self, x0, obj):
         self.x0 = x0
-        return self.optimise(obj)
+        arg, val, stats = self.optimise(obj)
+        return arg, stats['evals']
     
 class adam(optimizer):
     def __init__(self):
@@ -31,6 +32,7 @@ class adam(optimizer):
         self.tol = 1e-2
         
     def set_parameters(self, paras):
+        self.paras = paras
         self.x0 = paras['x0']
         self.alpha = paras['alpha']
         self.beta_1 = paras['beta_1']
@@ -38,28 +40,34 @@ class adam(optimizer):
         self.epsilon = paras['epsilon']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
         
     def optimise(self, obj):
         m_t = 0 
         v_t = 0 
-        t = 0
+        eval_cnt = 1
         x = self.x0
-        while t < self.max_iter:					#till it gets converged
-            t+=1
+        stats = {}
+        stats['status'] = None
+        while eval_cnt < self.max_iter:					#till it gets converged
+            eval_cnt+=1
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
             m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
-            m_cap = m_t/(1-(self.beta_1**t))		#calculates the bias-corrected estimates
-            v_cap = v_t/(1-(self.beta_2**t))		#calculates the bias-corrected estimates
+            m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
+            v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
             x_prev = x								
             x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
             if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
                 break
-        return x, t
+        stats['evals'] = eval_cnt
+        return x, obj.func(x), stats
     
 class cma_es(optimizer):
     def set_parameters(self, paras):
-        self.mean0 = paras['mean0'] 
+        self.paras = paras
+        self.mean0 = paras['x0'] 
         self.std = paras['std']
         self.tol = paras['tol']
         self.adjust_func = paras['adjust_func']
@@ -89,9 +97,9 @@ class cma_es(optimizer):
             return (1 - c1 - cmu) * C + c1 * (pc * pc.T + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.T @ np.diag(weights) @ artmp
         def update_sigma(sigma, ps):
             return sigma * np.exp((cs / damps) * (np.linalg.norm(ps)/ chiN - 1))
-        def not_moving(stats, tol):
-            dis_arg = np.linalg.norm(stats['arg'][-1] - stats['arg'][-2])
-            dis_val = np.linalg.norm(stats['val'][-1] - stats['val'][-2])
+        def is_not_moving(arg, val, pre_arg, pre_val, tol):
+            dis_arg = np.linalg.norm(arg - pre_arg)
+            dis_val = np.linalg.norm(val - pre_val)
             return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
 
         if self.verbose:
@@ -147,19 +155,23 @@ class cma_es(optimizer):
         iter_, eval_ = 0, 0
 
         # initial data in record
+        for i in range(lambda_):
+            x[i] = (mean + np.random.randn(dim, 1)).ravel()
+            f[i] = obj.func(x[i])
+        idx = np.argsort(f)
+        x_ascending = x[idx]
         if self.record:
-            for i in range(lambda_):
-                x[i] = (mean + np.random.randn(dim, 1)).ravel()
-                f[i] = obj.func(x[i])
-            idx = np.argsort(f)
-            x_ascending = x[idx]
             stats['arg'].append(x_ascending)
             stats['val'].append(f[idx])
             stats['mean'].append(mean)
             stats['std'].append(sigma * B @ np.diag(D))
             stats['evals_per_iter'].append(np.ones((lambda_,)))
             stats['x_adjust'].append(np.vstack((x.T.copy(), x.T.copy())))
-
+        arg = x_ascending
+        val = f[idx]
+        pre_arg = x_ascending
+        pre_val = f[idx]
+        
         # optimise by iterations
         try:
             while iter_ < self.max_iter:
@@ -190,21 +202,26 @@ class cma_es(optimizer):
                 invsqrtC = B @ np.diag(D**-1) @ B
 
                 # record data during process for post analysis
-                if self.record == True:
+                if self.record:
                     stats['arg'].append(x_ascending)
                     stats['val'].append(f[idx])
                     stats['mean'].append(mean)
                     stats['std'].append(sigma * B @ np.diag(D))
                     stats['evals_per_iter'].append(iter_eval.copy())
                     stats['x_adjust'].append(np.vstack((x_old.T.copy(), x.T.copy())))
-                    
+                # stopping condition    
+                arg = x_ascending
+                val = f[idx]
+                
                 # check the stop condition
                 if np.max(D) > (np.min(D) * 1e6):
                     stats['status'] = 'diverge'
                     print('diverge, concentrate in low dimension manifold')
                     break
-                if not_moving(stats, self.tol) :
-                    break   
+                if is_not_moving(arg, val, pre_arg, pre_val, self.tol) :
+                    break
+                pre_arg = arg
+                pre_val = val
         except np.linalg.LinAlgError as err:
             stats['status'] = 'diverge'
             print('diverge, raise LinAlgError!')
@@ -212,28 +229,38 @@ class cma_es(optimizer):
             if self.verbose:
                 print('eigenvalue of variance = {}'.format(D))
                 print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
-                print('found minimum position = {}, found minimum = {}'.format(stats['arg'][-1][0], stats['val'][-1][0]))
+                print('found minimum position = {}, found minimum = {}'.format(arg[0], val[0]))
 
         # carry statistics info before quit
-        stats['arg'] = np.array(stats['arg'])
-        stats['val'] = np.array(stats['val'])
-        stats['mean'] = np.array(stats['mean'])
-        stats['std'] = np.array(stats['std'])
-        stats['evals_per_iter'] = np.array(stats['evals_per_iter'])
-        stats['x_adjust'] = np.array(stats['x_adjust'])
-        return stats['arg'][-1][0], stats['val'][-1][0], stats
+        if self.record:
+            stats['arg'] = np.array(stats['arg'])
+            stats['val'] = np.array(stats['val'])
+            stats['mean'] = np.array(stats['mean'])
+            stats['std'] = np.array(stats['std'])
+            stats['evals_per_iter'] = np.array(stats['evals_per_iter'])
+            stats['x_adjust'] = np.array(stats['x_adjust'])
+        stats['evals'] = eval_
+        return arg[0], val[0], stats
     
 class do_nothing(adjust_optimizer):
+    def __init__(self):
+        self.stats = {}
+        self.stats['status'] = None
+        self.stats['evals'] = 1
     def set_parameters(self, paras):
         return None
     def optimise(self, obj):
-        return self.x0, 1
+        return self.x0, None, self.stats
     
 class round_off(adjust_optimizer):
+    def __init__(self):
+        self.stats = {}
+        self.stats['status'] = None
+        self.stats['evals'] = 1
     def set_parameters(self, paras):
-        pass
+        return None
     def optimise(self, obj):
-        return np.round(self.x0), 1
+        return np.round(self.x0), None, self.stats
     
 class line_search(adjust_optimizer):
     def __init__(self, alpha=1, beta=0.1):
@@ -241,12 +268,17 @@ class line_search(adjust_optimizer):
         self.beta = beta
         self.max_iter = 100
         self.tol = 1e-2
+        self.stats = {}
+        self.stats['status'] = None
     def set_parameters(self, paras):
-        self.x0 = None if 'x0' not in paras.keys() else paras['x0']
+        self.paras = paras
+        self.x0 = paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
     def optimise(self, obj):
         '''
         @param x0: initial point position
@@ -273,7 +305,8 @@ class line_search(adjust_optimizer):
             eval_cnt += 2
             if np.linalg.norm(p) < self.tol:
                 break
-        return x, eval_cnt
+        self.stats['evals'] = eval_cnt
+        return x, fnx, self.stats
 
 class line_search_1step(adjust_optimizer):
     def __init__(self, alpha=1, beta=0.1):
@@ -281,12 +314,17 @@ class line_search_1step(adjust_optimizer):
         self.beta = beta
         self.max_iter = 4
         self.tol = 1e-2
+        self.stats = {}
+        self.stats['status'] = None
     def set_parameters(self, paras):
-        self.x0 = None if 'x0' not in paras.keys() else paras['x0']
+        self.paras = paras
+        self.x0 = paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
     def optimise(self, obj):
         '''
         @param x0: initial point position
@@ -304,4 +342,5 @@ class line_search_1step(adjust_optimizer):
             alpha_ *= tao
             eval_cnt += 1
         x += alpha_ * p
-        return x, eval_cnt
+        self.stats['evals'] = eval_cnt
+        return x, obj.func(x), self.stats
