@@ -67,7 +67,7 @@ class multiple_experiment:
                 costs = np.zeros_like(res)
                 evals = np.zeros_like(res)
                 for k in range(self.size):
-                    opt_paras['mean0'] = points[k].reshape(2,1)
+                    opt_paras['x0'] = points[k].reshape(2,1)
                     self.exp.optimizer.set_parameters(opt_paras)
                     status, costs[k], evals[k] = self.exp.do()
                     if(status == 'global minimum'):

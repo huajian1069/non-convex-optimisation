@@ -40,6 +40,8 @@ class adam(optimizer):
         self.epsilon = paras['epsilon']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
         
     def optimise(self, obj):
         m_t = 0 
@@ -48,13 +50,13 @@ class adam(optimizer):
         x = self.x0
         stats = {}
         stats['status'] = None
-        while t < self.max_iter:					#till it gets converged
+        while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt+=1
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
             m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
-            m_cap = m_t/(1-(self.beta_1**t))		#calculates the bias-corrected estimates
-            v_cap = v_t/(1-(self.beta_2**t))		#calculates the bias-corrected estimates
+            m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
+            v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
             x_prev = x								
             x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
             if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
@@ -65,7 +67,7 @@ class adam(optimizer):
 class cma_es(optimizer):
     def set_parameters(self, paras):
         self.paras = paras
-        self.mean0 = paras['mean0'] 
+        self.mean0 = paras['x0'] 
         self.std = paras['std']
         self.tol = paras['tol']
         self.adjust_func = paras['adjust_func']
@@ -275,6 +277,8 @@ class line_search(adjust_optimizer):
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
     def optimise(self, obj):
         '''
         @param x0: initial point position
@@ -314,11 +318,13 @@ class line_search_1step(adjust_optimizer):
         self.stats['status'] = None
     def set_parameters(self, paras):
         self.paras = paras
-        self.x0 = None if 'x0' not in paras.keys() else paras['x0']
+        self.x0 = paras['x0']
         self.alpha = paras['alpha']
         self.beta = paras['beta']
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
     def optimise(self, obj):
         '''
         @param x0: initial point position
