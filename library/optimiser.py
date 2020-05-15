@@ -22,7 +22,7 @@ class adjust_optimizer(optimizer):
         arg, val, stats = self.optimise(obj)
         return arg, stats['evals']
     
-class adam(optimizer):
+class adam(adjust_optimizer):
     def __init__(self):
         self.alpha = 0.01
         self.beta_1 = 0.9
@@ -51,7 +51,7 @@ class adam(optimizer):
         stats = {}
         stats['status'] = None
         while eval_cnt < self.max_iter:					#till it gets converged
-            eval_cnt+=1
+            eval_cnt += 1
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
             m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
@@ -64,7 +64,7 @@ class adam(optimizer):
         stats['evals'] = eval_cnt
         return x, obj.func(x), stats
     
-class cma_es(optimizer):
+class cma_es(adjust_optimizer):
     def set_parameters(self, paras):
         self.paras = paras
         self.mean0 = paras['x0'] 

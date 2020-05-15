@@ -20,7 +20,8 @@ class single_experiment:
         cost = np.linalg.norm(optimum - self.objective_func.get_optimum())
         if self.optimizer.verbose:
             print("\nResult: ", statistics['status'])
-            print("Cost_val", cost)
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal, statistics['evals']))
+            print("Cost: ", cost)
         if self.optimizer.record == False:
             return statistics['status'], cost, statistics['evals']
         else:
