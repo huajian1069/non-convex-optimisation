@@ -22,48 +22,6 @@ class adjust_optimizer(optimizer):
         arg, val, stats = self.optimise(obj)
         return arg, stats['evals']
     
-class adam(adjust_optimizer):
-    def __init__(self):
-        self.alpha = 0.01
-        self.beta_1 = 0.9
-        self.beta_2 = 0.999
-        self.epsilon = 1e-8
-        self.max_iter = 10000
-        self.tol = 1e-2
-        
-    def set_parameters(self, paras):
-        self.paras = paras
-        self.x0 = paras['x0']
-        self.alpha = paras['alpha']
-        self.beta_1 = paras['beta_1']
-        self.beta_2 = paras['beta_2']
-        self.epsilon = paras['epsilon']
-        self.max_iter = paras['max_iter']
-        self.tol = paras['tol']
-        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
-        self.record = True if 'record' not in paras.keys() else paras['record']
-        
-    def optimise(self, obj):
-        m_t = 0 
-        v_t = 0 
-        eval_cnt = 1
-        x = self.x0
-        stats = {}
-        stats['status'] = None
-        while eval_cnt < self.max_iter:					#till it gets converged
-            eval_cnt += 1
-            g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
-            m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
-            v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
-            m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
-            v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
-            x_prev = x								
-            x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
-            if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
-                break
-        stats['evals'] = eval_cnt
-        return x, obj.func(x), stats
-    
 class cma_es(adjust_optimizer):
     def set_parameters(self, paras):
         self.paras = paras
@@ -262,6 +220,53 @@ class round_off(adjust_optimizer):
     def optimise(self, obj):
         return np.round(self.x0), None, self.stats
     
+class adam(adjust_optimizer):
+    def __init__(self):
+        self.alpha = 0.01
+        self.beta_1 = 0.9
+        self.beta_2 = 0.999
+        self.epsilon = 1e-8
+        self.max_iter = 10000
+        self.tol = 1e-2
+        self.verbose = False
+        self.record = False
+        self.x0 = np.array([10, 10]) 
+        
+    def set_parameters(self, paras):
+        self.paras = paras
+        self.x0 = paras['x0']
+        self.alpha = paras['alpha']
+        self.beta_1 = paras['beta_1']
+        self.beta_2 = paras['beta_2']
+        self.epsilon = paras['epsilon']
+        self.max_iter = paras['max_iter']
+        self.tol = paras['tol']
+        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
+        self.record = True if 'record' not in paras.keys() else paras['record']
+        
+    def optimise(self, obj):
+        m_t = 0 
+        v_t = 0 
+        eval_cnt = 1
+        x = self.x0
+        stats = {}
+        stats['status'] = None
+        if self.verbose:
+            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+        while eval_cnt < self.max_iter:					#till it gets converged
+            eval_cnt += 1
+            g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
+            m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
+            v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
+            m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
+            v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
+            x_prev = x								
+            x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
+            if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
+                break
+        stats['evals'] = eval_cnt
+        return x, obj.func(x), stats
+    
 class line_search(adjust_optimizer):
     def __init__(self, alpha=1, beta=0.1):
         self.alpha = alpha
@@ -270,6 +275,10 @@ class line_search(adjust_optimizer):
         self.tol = 1e-2
         self.stats = {}
         self.stats['status'] = None
+        self.verbose = False
+        self.record = False
+        self.x0 = np.array([10, 10]) 
+     
     def set_parameters(self, paras):
         self.paras = paras
         self.x0 = paras['x0']
@@ -293,6 +302,8 @@ class line_search(adjust_optimizer):
         p = - obj.dfunc(x)
         fnx = obj.func(x + alpha_ * p)
         eval_cnt = 4
+        if self.verbose:
+            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
         for k in range(self.max_iter):
             while fnx > fx + alpha_ * self.beta * (-p @ p):
                 alpha_ *= tao

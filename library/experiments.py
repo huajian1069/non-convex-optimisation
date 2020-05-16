@@ -17,13 +17,11 @@ class single_experiment:
             statistics['status'] = 'global minimum'
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
-        cost = np.linalg.norm(optimum - self.objective_func.get_optimum())
         if self.optimizer.verbose:
             print("\nResult: ", statistics['status'])
-            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal, statistics['evals']))
-            print("Cost: ", cost)
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.ravel(), statistics['evals']))
         if self.optimizer.record == False:
-            return statistics['status'], cost, statistics['evals']
+            return statistics['status'], optimum, statistics['evals']
         else:
             self.analyser = post_analysis(statistics, self.objective_func)
             
@@ -62,14 +60,12 @@ class multiple_experiment:
                 mask[num_y-1-j, i] = 0
                 position_x[num_y-1-j, i] = x
                 position_y[num_y-1-j, i] = y
-                opt_paras = self.exp.optimizer.paras
                 # calculate the probility of getting global minimum 
                 res = np.zeros((self.size, ))
                 costs = np.zeros_like(res)
                 evals = np.zeros_like(res)
                 for k in range(self.size):
-                    opt_paras['x0'] = points[k].reshape(2,1)
-                    self.exp.optimizer.set_parameters(opt_paras)
+                    self.exp.optimizer.x0 = points[k].reshape(2,1)
                     status, costs[k], evals[k] = self.exp.do()
                     if(status == 'global minimum'):
                         res[k] = 1
