@@ -55,20 +55,55 @@ It has some intractable properties, like indifferentiable along the ridge, globa
 - In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
 - Implemented one-step line search CMA-ES. It behaves more like original CMA-ES.
 
+### week 12: 
+
+In case of original Ackley objective function, with medium step size, orginal CMA-ES costs 20x time than Adam. line search CMA-ES costs 10x time than original CMA-ES. But improvements on convergence probility is also significant. From 0 to 0.03, from 0.03 to 0.41. 
+
+## summary on original ackley
+| -- |original CMA | line search - CMA(medium step size) | adam |
+| -- | -- | -- | -- | 
+| #experiments| 150 experiments | 150 experiments | 150 experiments |
+| total time| 13.1 s | 180 s | 0.5 s |
+| evalutaions per exp | 1.46 k evals |  7.1 k evals |  0.063 k evals |
+| *performance*  | -- | -- | --|
+| probability |  0.03  | 0.41 | 0 |
+
+
+## summary on  ackley
+| -- |original CMA | line search (default(medium) step size) - CMA  | round off - CMA|
+| -- | -- | --| -- |
+| #experiments| 100 experiments | 100 experiments | 100 experiments |
+| total time| 3.9 s | 33.8 s |  2.8 s |
+| evalutaions per exp | 0.6 k evals |  11.5 k evals | 0.3 k evals |
+| *performance* | -- | -- | -- |
+| probability |  0.75  | 0.8 | 0.25 |
+| cost | 2.48 | 2.20 | 6.97 |
+
+
+## summary on tunned ackley
+| -- |original CMA | line search (default(medium) step size) - CMA  | round off - CMA|
+| -- | -- | --| -- |
+| #experiments| 100 experiments | 100 experiments | 100 experiments |
+| total time| 3.9 s | 33.8 s |  2.8 s |
+| evalutaions per exp | 0.6 k evals |  11.5 k evals | 0.3 k evals |
+| *performance* | -- | -- | -- |
+| probability |  0.75  | 0.8 | 0.25 |
+| cost | 2.48 | 2.20 | 6.97 |
+
 ## Schedule
 ### short term
-- [ ] test more objective functions
-- [ ] plot grid plot of convergence
-
+- [x] test more objective functions
+- [x] plot grid plot of convergence
+- [ ] clear conclusition about convergence improvement
+- [ ] clear conclusition about additional computation time
 
 ### long term
-- Look forward more theoerical guidance: read books and browse slides about convex optimisation. Easter holiday is a good chance to do this.
-- Also, I wonder how does anyone else tackle this problem, especially in context of neural network training. I should read some papers.
-- How does CMA-ES behave compared with other heuristic method? like particle swarm optimisation(PSO), Ant colony optimisation(ACO). Distributed Intelligent System on another repository is a good example to start.
-
+- [ ] Look forward more theoerical guidance: read books and browse slides about convex optimisation.
+- [ ] Also, I wonder how does anyone else tackle this problem, especially in context of neural network training.
+- [ ] How does CMA-ES behave compared with other heuristic method? like particle swarm optimisation(PSO), Ant colony optimisation(ACO).
 
 ## Feedback
-Open to hear any voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request.
+Open to hear some voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request.
 
 I will keep on updating this repository during spring semester 2020. 
 
