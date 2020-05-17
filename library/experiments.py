@@ -18,7 +18,7 @@ class single_experiment:
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
         if self.optimizer.verbose:
-            print("\nResult: ", statistics['status'])
+            print("Result: ", statistics['status'])
             print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.ravel(), statistics['evals']))
         if self.optimizer.record == False:
             return statistics['status'], optimum, statistics['evals']

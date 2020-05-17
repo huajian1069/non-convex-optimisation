@@ -20,12 +20,12 @@ class adjust_optimizer(optimizer):
     def adjust(self, x0, obj):
         self.x0 = x0
         arg, val, stats = self.optimise(obj)
-        return arg, stats['evals']
+        return arg, val, stats['evals']
     
 class cma_es(adjust_optimizer):
     def set_parameters(self, paras):
         self.paras = paras
-        self.mean0 = paras['x0'] 
+        self.x0 = paras['x0'] 
         self.std = paras['std']
         self.tol = paras['tol']
         self.adjust_func = paras['adjust_func']
@@ -61,12 +61,12 @@ class cma_es(adjust_optimizer):
             return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
 
         if self.verbose:
-            print("*******starting optimisation from intitial mean: ", self.mean0.ravel())
+            print("*******starting optimisation from intitial mean: ", self.x0.ravel())
         # User defined input parameters 
         dim = 2    
         sigma = 0.3
         D = self.std / sigma
-        mean = self.mean0
+        mean = self.x0
 
         # the size of solutions group
         lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
@@ -139,8 +139,7 @@ class cma_es(adjust_optimizer):
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
                     x_old[i] = x[i]
-                    x[i], eval_cnt = self.adjust_func.adjust(x[i], obj)
-                    f[i] = obj.func(x[i])
+                    x[i], f[i], eval_cnt = self.adjust_func.adjust(x[i], obj)
                     eval_ += eval_cnt
                     iter_eval[i] = eval_cnt
                 # sort the value and positions of solutions 
@@ -201,34 +200,48 @@ class cma_es(adjust_optimizer):
         return arg[0], val[0], stats
     
 class do_nothing(adjust_optimizer):
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.stats = {}
         self.stats['status'] = None
         self.stats['evals'] = 1
+        self.verbose = False
+        self.record = False
+        self.x0 = np.array([10, 10]) 
+        self.verbose = verbose
     def set_parameters(self, paras):
-        return None
+        self.verbose = paras['verbose']
+        self.record = paras['record']
     def optimise(self, obj):
-        return self.x0, None, self.stats
+        if self.verbose:
+            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+        return self.x0, obj.func(self.x0), self.stats
     
 class round_off(adjust_optimizer):
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.stats = {}
         self.stats['status'] = None
         self.stats['evals'] = 1
+        self.verbose = False
+        self.record = False
+        self.x0 = np.array([10, 10]) 
+        self.verbose = verbose
     def set_parameters(self, paras):
-        return None
+        self.verbose = paras['verbose']
+        self.record = paras['record']
     def optimise(self, obj):
-        return np.round(self.x0), None, self.stats
+        if self.verbose:
+            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+        return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
-    def __init__(self):
+    def __init__(self, verbose=False):
         self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
         self.epsilon = 1e-8
         self.max_iter = 10000
         self.tol = 1e-2
-        self.verbose = False
+        self.verbose = verbose
         self.record = False
         self.x0 = np.array([10, 10]) 
         
@@ -247,7 +260,7 @@ class adam(adjust_optimizer):
     def optimise(self, obj):
         m_t = 0 
         v_t = 0 
-        eval_cnt = 1
+        eval_cnt = 0
         x = self.x0
         stats = {}
         stats['status'] = None
@@ -301,7 +314,7 @@ class line_search(adjust_optimizer):
         fx = obj.func(x)
         p = - obj.dfunc(x)
         fnx = obj.func(x + alpha_ * p)
-        eval_cnt = 4
+        eval_cnt = 3
         if self.verbose:
             print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
         for k in range(self.max_iter):
@@ -348,7 +361,7 @@ class line_search_1step(adjust_optimizer):
         tao = 0.5
         fx = obj.func(x)
         p = - obj.dfunc(x)
-        eval_cnt = 4
+        eval_cnt = 2
         while obj.func(x + alpha_ * p) > fx + alpha_ * self.beta * (-p @ p):
             alpha_ *= tao
             eval_cnt += 1
