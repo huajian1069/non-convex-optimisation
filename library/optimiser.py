@@ -261,11 +261,11 @@ class adam(adjust_optimizer):
         m_t = 0 
         v_t = 0 
         eval_cnt = 0
-        x = self.x0
+        x = self.x0.copy().reshape(2,)
         stats = {}
         stats['status'] = None
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+            print("\n\n*******starting optimisation from intitial point: ", self.x0.ravel())
         while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt += 1
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
@@ -275,7 +275,7 @@ class adam(adjust_optimizer):
             v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
             x_prev = x								
             x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
-            if(np.linalg.norm(x-x_prev) < 1e-5):		#checks if it is converged or not
+            if(np.linalg.norm(x-x_prev) < self.tol):		#checks if it is converged or not
                 break
         stats['evals'] = eval_cnt
         return x, obj.func(x), stats

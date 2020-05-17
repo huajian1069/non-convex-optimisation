@@ -140,15 +140,13 @@ class tuned_ackley(objective_func):
     # evaluated domain: circle with radius 19
     def __init__(self, radius=19):
         self.optimal = np.array([0, 0])
-        self.optimum = np.e
+        self.optimum = 0
         self.radius = radius
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
         x and y is interchangeable
         global minimum is 0 with arguments x=y=0
-        local minimums far away from orgin are 20
-        supremum is 20 + e - 1/e = 22.35
         symmetric along x=0, y=0, y=x lines
         disappearing global gradient when far away from optimal
         '''
@@ -156,7 +154,7 @@ class tuned_ackley(objective_func):
             return 5e1
         arg1 = -0.2 * np.sqrt(0.5 * (x[0] ** 2 + x[1] ** 2))
         arg2 = 0.5 * (np.cos(2. * np.pi * x[0]) + np.cos(2. * np.pi * x[1]))
-        return -20. * np.exp(arg1) - 0.1 * arg1**4 * np.exp(arg2) + 20. + np.e
+        return -20. * np.exp(arg1) - 0.1 * arg1**4 * np.exp(arg2) + 20.
     def dfunc(self, x):
         if x[0] == 0 and x[1] == 0: 
             return np.array([0, 0])
