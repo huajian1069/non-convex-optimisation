@@ -28,8 +28,9 @@ class objective_func(ABC):
                 zz[j, i] = self.func((x[i], y[j]))
         fig = plt.figure(figsize=(4,4))
         ax = fig.add_subplot(111)
-        ax.scatter(x=xx.ravel(), y=yy.ravel(), c=zz.ravel())
+        sc = ax.scatter(x=xx.ravel(), y=yy.ravel(), c=zz.ravel())
         ax.scatter(x=[self.optimal[0]], y=[self.optimal[1]], c='red', marker='x')
+        plt.colorbar(sc)
         fig.show()
         return ax
     def visualise3d(self, lim, n):
@@ -60,11 +61,38 @@ class objective_func(ABC):
         ax.scatter(x=[self.optimal[0]], y=[self.optimal[1]], c='red', marker='x')
         fig.show()
         return ax
+    def visualise2d_section(self, pos, dire):
+        fig = plt.figure(figsize=(4,4))
+        xs = np.linspace(-self.lim, self.lim, 301)
+        fs = []
+        if dire == 'x':
+            for x in xs:
+                fs.append(self.func([x, pos]))
+        else:
+            for x in xs:
+                fs.append(self.func([pos, x]))
+        plt.plot(xs, fs)
+        fig.show()
+    def visualize2d_section_gradient(self, pos, dire):
+        fig = plt.figure(figsize=(4,4))
+        xs = np.linspace(-self.lim, self.lim, 300)
+        dfs = []
+        if dire == 'x':
+            for x in xs:
+                dfs.append(self.dfunc([x, pos]))
+        else:
+            for x in xs:
+                dfs.append(self.dfunc([pos, x]))
+        dfs = np.array(dfs)
+        plt.plot(xs, dfs[:,0])
+        plt.plot(xs, dfs[:,1])
+        fig.show()
     
 class ackley(objective_func):
     def __init__(self):
         self.optimal = np.array([0, 0])
         self.optimum = 0
+        self.lim = 25
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
@@ -100,6 +128,7 @@ class bukin(objective_func):
     def __init__(self):
         self.optimal = np.array([-10, 1])
         self.optimum = 0
+        self.lim = 15
     def func(self, x):
         return 100 * np.sqrt(np.abs(x[1] - 0.01 * x[0]**2)) + 0.01 * np.abs(x[0] + 10)
     def dfunc(self, x):
@@ -114,16 +143,19 @@ class bukin(objective_func):
 class eggholder(objective_func):
     # evaluated domain: 
     def __init__(self):
-        self.optimal = np.array([512, 404.2319])
-        self.optimum = -959.6407
+        self.optimal = np.array([522, 413])
+        self.optimum = 0
+        self.lim = 550
     def func(self, x):
-        if np.abs(x[0]) > 512 or np.abs(x[1]) > 512:
-            return 1e3
+        if np.abs(x[0]) > self.lim or np.abs(x[1]) > self.lim:
+            return 2e3
         arg1 = x[0]/2 + (x[1] + 47) 
         arg2 = x[0]   - (x[1] + 47)
         f = lambda xx: np.sin(np.sqrt(np.abs(xx)))
-        return -(x[1] + 47) * f(arg1) - x[0] * f(arg2)
+        return -(x[1] + 47) * f(arg1) - x[0] * f(arg2) + 976.873
     def dfunc(self, x):
+        if np.abs(x[0]) > self.lim or np.abs(x[1]) > self.lim:
+            return np.array([0, 0])
         arg1 = x[0]/2 + (x[1] + 47) 
         arg2 = x[0]   - (x[1] + 47)
         g = lambda xx: np.cos(np.sqrt(np.abs(xx)))/np.sqrt(np.abs(xx))/2*np.sign(xx)
@@ -138,10 +170,10 @@ class eggholder(objective_func):
     
 class tuned_ackley(objective_func):
     # evaluated domain: circle with radius 19
-    def __init__(self, radius=19):
+    def __init__(self, lim=22):
         self.optimal = np.array([0, 0])
         self.optimum = 0
-        self.radius = radius
+        self.lim = lim
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
@@ -150,22 +182,29 @@ class tuned_ackley(objective_func):
         symmetric along x=0, y=0, y=x lines
         disappearing global gradient when far away from optimal
         '''
-        if np.linalg.norm(x) > self.radius:
+        if np.linalg.norm(x) > self.lim:
             return 5e1
         arg1 = -0.2 * np.sqrt(0.5 * (x[0] ** 2 + x[1] ** 2))
-        arg2 = 0.5 * (np.cos(2. * np.pi * x[0]) + np.cos(2. * np.pi * x[1]))
+        arg2 = 0.25 * (np.cos(np.pi * x[0]) + np.cos(np.pi * x[1]))
         return -20. * np.exp(arg1) - 0.1 * arg1**4 * np.exp(arg2) + 20.
     def dfunc(self, x):
         if x[0] == 0 and x[1] == 0: 
             return np.array([0, 0])
-        elif np.linalg.norm(x) > self.radius:
+        elif np.linalg.norm(x) > self.lim:
             return np.array([0, 0])
         arg1 = -0.2 * np.sqrt(0.5 * (x[0] ** 2 + x[1] ** 2))
-        arg2 = 0.5 * (np.cos(2. * np.pi * x[0]) + np.cos(2. * np.pi * x[1]))
-        g = lambda xx: -0.4 * xx / arg1 * np.exp(arg1) + np.pi/10 * arg1**4 * np.sin(2 * np.pi * xx) * np.exp(arg2) \
+        arg2 = 0.25 * (np.cos(np.pi * x[0]) + np.cos(np.pi * x[1]))
+        g = lambda xx: -0.4 * xx / arg1 * np.exp(arg1) + np.pi/40 * arg1**4 * np.sin(np.pi * xx) * np.exp(arg2) \
                          - xx/6250 * np.exp(arg2) * (x[0]**2 + x[1]**2)
         return np.array([g(x[0]), g(x[1])])
     def get_optimal(self):
         return self.optimal
     def get_optimum(self):
         return self.optimum
+    def visualise2d_section(self, pos, dire):
+        super().visualise2d_section(pos, dire)
+        plt.plot([-25, 25], [15.67, 15.67], label='y=15.67')
+        plt.plot([-25, 25], [3.63, 3.66], label='y=3.66')
+        plt.plot([12.96, 12.96], [0, 50], label='x=12.96')
+        plt.legend()
+        fig.show()
