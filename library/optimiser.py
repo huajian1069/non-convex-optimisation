@@ -23,13 +23,21 @@ class adjust_optimizer(optimizer):
         return arg, val, stats['evals']
     
 class cma_es(adjust_optimizer):
+    def __init__(self):
+        paras = {'x0': np.zeros((2,)),
+                 'std': np.ones((2,)) * 3, 
+                 'tol': 1e-5, 
+                 'adjust_func': do_nothing(), 
+                 'record': False, 
+                 'verbose': False}
+        self.set_parameters(paras)
     def set_parameters(self, paras):
         self.paras = paras
         self.x0 = paras['x0'] 
         self.std = paras['std']
         self.tol = paras['tol']
         self.adjust_func = paras['adjust_func']
-        self.max_iter = 400
+        self.max_iter = 400 if 'max_iter' not in paras.keys() else paras['max_iter']
         # set none to use default value 
         self.cluster_size = None if 'cluster_size' not in paras.keys() else paras['cluster_size']
         self.survival_size = None if 'survival_size' not in paras.keys() else paras['survival_size']
@@ -61,7 +69,7 @@ class cma_es(adjust_optimizer):
             return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
 
         if self.verbose:
-            print("*******starting optimisation from intitial mean: ", self.x0.ravel())
+            print("\n\n*******starting optimisation from intitial mean: ", self.x0.ravel())
         # User defined input parameters 
         dim = 2    
         sigma = 0.3
@@ -230,7 +238,7 @@ class round_off(adjust_optimizer):
         self.record = paras['record']
     def optimise(self, obj):
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+            print("\n\n*******starting optimisation from intitial point: ", self.x0.ravel())
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):

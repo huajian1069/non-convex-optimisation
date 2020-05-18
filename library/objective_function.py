@@ -48,7 +48,7 @@ class objective_func(ABC):
                           width=500, height=500,
                           margin=dict(l=65, r=50, b=65, t=90))
         fig.show()
-    def visulise_gradient(self, lim, n):
+    def visualise_gradient(self, lim, n):
         x, y = np.linspace(-lim, lim, n), np.linspace(-lim, lim, n)
         xx, yy = np.meshgrid(x, y)
         zz = np.zeros((n, n, 2))
@@ -73,7 +73,7 @@ class objective_func(ABC):
                 fs.append(self.func([pos, x]))
         plt.plot(xs, fs)
         fig.show()
-    def visualize2d_section_gradient(self, pos, dire):
+    def visualise2d_section_gradient(self, pos, dire):
         fig = plt.figure(figsize=(4,4))
         xs = np.linspace(-self.lim, self.lim, 300)
         dfs = []
@@ -207,4 +207,3 @@ class tuned_ackley(objective_func):
         plt.plot([-25, 25], [3.63, 3.66], label='y=3.66')
         plt.plot([12.96, 12.96], [0, 50], label='x=12.96')
         plt.legend()
-        fig.show()
