@@ -208,13 +208,13 @@ class cma_es(adjust_optimizer):
         return arg[0], val[0], stats
     
 class do_nothing(adjust_optimizer):
-    def __init__(self, verbose=False):
+    def __init__(self, dim=2, verbose=False):
         self.stats = {}
         self.stats['status'] = None
         self.stats['evals'] = 1
         self.verbose = False
         self.record = False
-        self.x0 = np.array([10, 10]) 
+        self.x0 = np.zeros((dim,))
         self.verbose = verbose
     def set_parameters(self, paras):
         self.verbose = paras['verbose']
@@ -225,13 +225,13 @@ class do_nothing(adjust_optimizer):
         return self.x0, obj.func(self.x0), self.stats
     
 class round_off(adjust_optimizer):
-    def __init__(self, verbose=False):
+    def __init__(self, dim=2, verbose=False):
         self.stats = {}
         self.stats['status'] = None
         self.stats['evals'] = 1
         self.verbose = False
         self.record = False
-        self.x0 = np.array([10, 10]) 
+        self.x0 = np.zeros((dim,))
         self.verbose = verbose
     def set_parameters(self, paras):
         self.verbose = paras['verbose']
@@ -242,7 +242,7 @@ class round_off(adjust_optimizer):
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
-    def __init__(self, verbose=False):
+    def __init__(self, dim=2, verbose=False):
         self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
@@ -251,7 +251,7 @@ class adam(adjust_optimizer):
         self.tol = 1e-2
         self.verbose = verbose
         self.record = False
-        self.x0 = np.array([10, 10]) 
+        self.x0 = np.zeros((dim,))
         
     def set_parameters(self, paras):
         self.paras = paras
@@ -269,7 +269,7 @@ class adam(adjust_optimizer):
         m_t = 0 
         v_t = 0 
         eval_cnt = 0
-        x = self.x0.copy().reshape(2,)
+        x = self.x0.copy().ravel()
         stats = {}
         stats['status'] = None
         if self.verbose:
@@ -289,7 +289,7 @@ class adam(adjust_optimizer):
         return x, obj.func(x), stats
     
 class line_search(adjust_optimizer):
-    def __init__(self, alpha=1, beta=0.1):
+    def __init__(self, alpha=1, beta=0.1, dim=2):
         self.alpha = alpha
         self.beta = beta
         self.max_iter = 100
@@ -298,7 +298,7 @@ class line_search(adjust_optimizer):
         self.stats['status'] = None
         self.verbose = False
         self.record = False
-        self.x0 = np.array([10, 10]) 
+        self.x0 = np.zeros((dim,))
      
     def set_parameters(self, paras):
         self.paras = paras
@@ -316,7 +316,7 @@ class line_search(adjust_optimizer):
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0.copy().reshape(2,)
+        x = self.x0.copy().ravel()
         alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
@@ -341,11 +341,12 @@ class line_search(adjust_optimizer):
         return x, fnx, self.stats
 
 class line_search_1step(adjust_optimizer):
-    def __init__(self, alpha=1, beta=0.1):
+    def __init__(self, alpha=1, beta=0.1, dim=2):
         self.alpha = alpha
         self.beta = beta
         self.max_iter = 4
         self.tol = 1e-2
+        self.x0 = np.zeros((dim,))
         self.stats = {}
         self.stats['status'] = None
     def set_parameters(self, paras):
@@ -364,7 +365,7 @@ class line_search_1step(adjust_optimizer):
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0.copy().reshape(2,)
+        x = self.x0.copy().ravel()
         alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
