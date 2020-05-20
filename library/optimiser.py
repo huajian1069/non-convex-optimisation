@@ -23,9 +23,10 @@ class adjust_optimizer(optimizer):
         return arg, val, stats['evals']
     
 class cma_es(adjust_optimizer):
-    def __init__(self):
-        paras = {'x0': np.zeros((2,)),
-                 'std': np.ones((2,)) * 3, 
+    def __init__(self, dim=2):
+        self.dim = dim
+        paras = {'x0': np.zeros((dim,)),
+                 'std': np.ones((dim,)) * 3, 
                  'tol': 1e-5, 
                  'adjust_func': do_nothing(), 
                  'record': False, 
@@ -71,10 +72,10 @@ class cma_es(adjust_optimizer):
         if self.verbose:
             print("\n\n*******starting optimisation from intitial mean: ", self.x0.ravel())
         # User defined input parameters 
-        dim = 2    
+        dim = self.dim
         sigma = 0.3
         D = self.std / sigma
-        mean = self.x0
+        mean = self.x0.reshape(dim, 1)
 
         # the size of solutions group
         lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
@@ -119,7 +120,6 @@ class cma_es(adjust_optimizer):
         stats['mean'], stats['std'] = [], []
         stats['status'] = None
         iter_, eval_ = 0, 0
-
         # initial data in record
         for i in range(lambda_):
             x[i] = (mean + np.random.randn(dim, 1)).ravel()
@@ -206,6 +206,7 @@ class cma_es(adjust_optimizer):
             stats['x_adjust'] = np.array(stats['x_adjust'])
         stats['evals'] = eval_
         return arg[0], val[0], stats
+ 
     
 class do_nothing(adjust_optimizer):
     def __init__(self, dim=2, verbose=False):
