@@ -243,7 +243,7 @@ class round_off(adjust_optimizer):
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
-    def __init__(self, dim=2, verbose=False):
+    def __init__(self, verbose=False):
         self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
@@ -252,8 +252,7 @@ class adam(adjust_optimizer):
         self.tol = 1e-2
         self.verbose = verbose
         self.record = False
-        self.x0 = np.zeros((dim,))
-        
+  
     def set_parameters(self, paras):
         self.paras = paras
         self.x0 = paras['x0']
@@ -290,7 +289,7 @@ class adam(adjust_optimizer):
         return x, obj.func(x), stats
     
 class line_search(adjust_optimizer):
-    def __init__(self, alpha=1, beta=0.1, dim=2):
+    def __init__(self, alpha=1, beta=0.1):
         self.alpha = alpha
         self.beta = beta
         self.max_iter = 100
@@ -299,7 +298,6 @@ class line_search(adjust_optimizer):
         self.stats['status'] = None
         self.verbose = False
         self.record = False
-        self.x0 = np.zeros((dim,))
      
     def set_parameters(self, paras):
         self.paras = paras
@@ -342,12 +340,11 @@ class line_search(adjust_optimizer):
         return x, fnx, self.stats
 
 class line_search_1step(adjust_optimizer):
-    def __init__(self, alpha=1, beta=0.1, dim=2):
+    def __init__(self, alpha=1, beta=0.1):
         self.alpha = alpha
         self.beta = beta
         self.max_iter = 4
         self.tol = 1e-2
-        self.x0 = np.zeros((dim,))
         self.stats = {}
         self.stats['status'] = None
     def set_parameters(self, paras):
