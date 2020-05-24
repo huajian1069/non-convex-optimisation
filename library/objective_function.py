@@ -105,7 +105,7 @@ class objective_func(ABC):
 class ackley(objective_func):
     def __init__(self, dim=2):
         self.optimum = 0
-        self.lim = 25
+        self.lim = 5
         self.dim = dim
         self.optimal = np.zeros((self.dim, ))
     def func(self, x):
@@ -122,8 +122,8 @@ class ackley(objective_func):
         arg2 = np.cos(2*np.pi*x).mean()
         return -20. * np.exp(arg1) - np.exp(arg2) + 20. + np.e
     def dfunc(self, x):
-        if np.linalg.norm(x) == 0:
-            return x
+        if np.linalg.norm(x) < 1e-3:
+            return np.zeros((self.dim, ))
         arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())
         arg2 = np.cos(2*np.pi*x).mean()
         g = lambda xx: -0.8 * xx / arg1 * np.exp(arg1) / self.dim + 2 * np.pi * np.sin(2 * np.pi * xx) * np.exp(arg2) / self.dim
@@ -204,8 +204,8 @@ class tuned_ackley(objective_func):
         arg2 = 0.5 * np.cos(np.pi*x).mean()
         return -20. * np.exp(arg1) - 0.1 * arg1**4 * np.exp(arg2) + 20.
     def dfunc(self, x):
-        if np.linalg.norm(x) == 0:
-            return x
+        if np.linalg.norm(x) < 1e-3:
+            return np.zeros((self.dim,))
         elif np.linalg.norm(x) > self.lim:
             return np.zeros((self.dim, ))
         arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())

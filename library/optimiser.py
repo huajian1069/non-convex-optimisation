@@ -243,7 +243,7 @@ class round_off(adjust_optimizer):
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
-    def __init__(self, verbose=False):
+    def __init__(self, dim=2, verbose=False):
         self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
@@ -252,7 +252,8 @@ class adam(adjust_optimizer):
         self.tol = 1e-2
         self.verbose = verbose
         self.record = False
-  
+        self.x0 = np.zeros((dim,))
+        
     def set_parameters(self, paras):
         self.paras = paras
         self.x0 = paras['x0']
@@ -263,7 +264,7 @@ class adam(adjust_optimizer):
         self.max_iter = paras['max_iter']
         self.tol = paras['tol']
         self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
-        self.record = True if 'record' not in paras.keys() else paras['record']
+        self.record = False if 'record' not in paras.keys() else paras['record']
         
     def optimise(self, obj):
         m_t = 0 
@@ -272,6 +273,13 @@ class adam(adjust_optimizer):
         x = self.x0.copy().ravel()
         stats = {}
         stats['status'] = None
+        stats['gradient_before_after'] = []
+        stats['arg'] = []
+        stats['val'] = []
+        if self.record:
+            stats['arg'].append(x.copy())
+            stats['val'].append(obj.func(x))
+            stats['gradient_before_after'].append([obj.dfunc(x), obj.dfunc(x)])
         if self.verbose:
             print("\n\n*******starting optimisation from intitial point: ", self.x0.ravel())
         while eval_cnt < self.max_iter:					#till it gets converged
@@ -281,10 +289,22 @@ class adam(adjust_optimizer):
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
             m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
             v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
-            x_prev = x								
-            x = x - (self.alpha*m_cap)/(np.sqrt(v_cap)+self.epsilon)	#updates the parameters
+            x_prev = x.copy()								
+            est_df = (m_cap)/(np.sqrt(v_cap)+self.epsilon)
+            x -= self.alpha * est_df 	#updates the parameters
+            if self.record:
+                stats['arg'].append(x.copy())
+                stats['val'].append(obj.func(x))
+                stats['gradient_before_after'].append([g_t, est_df])
             if(np.linalg.norm(x-x_prev) < self.tol):		#checks if it is converged or not
                 break
+        if self.verbose:
+            print('total evaluatios = {}'.format(eval_cnt))
+            print('gradient at stop position = {},\nmodified graident = {}'.format(g_t, est_df))
+            print('found minimum position = {}, found minimum = {}'.format(x, obj.func(x)))
+        stats['arg'] = np.array(stats['arg'])
+        stats['val'] = np.array(stats['val'])
+        stats['gradient_before_after'] = np.array(stats['gradient_before_after'])
         stats['evals'] = eval_cnt
         return x, obj.func(x), stats
     
@@ -294,8 +314,6 @@ class line_search(adjust_optimizer):
         self.beta = beta
         self.max_iter = 100
         self.tol = 1e-2
-        self.stats = {}
-        self.stats['status'] = None
         self.verbose = False
         self.record = False
      
@@ -322,6 +340,15 @@ class line_search(adjust_optimizer):
         p = - obj.dfunc(x)
         fnx = obj.func(x + alpha_ * p)
         eval_cnt = 3
+        stats = {}
+        stats['status'] = None
+        stats['gradient'] = []
+        stats['arg'] = []
+        stats['val'] = []
+        if self.record:
+            stats['arg'].append(x.copy())
+            stats['val'].append(fx)
+            stats['gradient'].append(-p)
         if self.verbose:
             print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
         for k in range(self.max_iter):
@@ -334,44 +361,18 @@ class line_search(adjust_optimizer):
             p = -obj.dfunc(x)
             fnx = obj.func(x + alpha_ * p)
             eval_cnt += 2
+            if self.record:
+                stats['arg'].append(x.copy())
+                stats['val'].append(fx)
+                stats['gradient'].append(-p)
             if np.linalg.norm(p) < self.tol:
                 break
-        self.stats['evals'] = eval_cnt
-        return x, fnx, self.stats
-
-class line_search_1step(adjust_optimizer):
-    def __init__(self, alpha=1, beta=0.1):
-        self.alpha = alpha
-        self.beta = beta
-        self.max_iter = 4
-        self.tol = 1e-2
-        self.stats = {}
-        self.stats['status'] = None
-    def set_parameters(self, paras):
-        self.paras = paras
-        self.x0 = paras['x0']
-        self.alpha = paras['alpha']
-        self.beta = paras['beta']
-        self.max_iter = paras['max_iter']
-        self.tol = paras['tol']
-        self.verbose = True if 'verbose' not in paras.keys() else paras['verbose']
-        self.record = True if 'record' not in paras.keys() else paras['record']
-    def optimise(self, obj):
-        '''
-        @param x0: initial point position
-        @param alpha: initial step size
-        @param beta: control the armijo condition
-        @return x: point position after moving to local minimum
-        '''
-        x = self.x0.copy().ravel()
-        alpha_ = self.alpha
-        tao = 0.5
-        fx = obj.func(x)
-        p = - obj.dfunc(x)
-        eval_cnt = 2
-        while obj.func(x + alpha_ * p) > fx + alpha_ * self.beta * (-p @ p):
-            alpha_ *= tao
-            eval_cnt += 1
-        x += alpha_ * p
-        self.stats['evals'] = eval_cnt
-        return x, obj.func(x), self.stats
+        stats['evals'] = eval_cnt
+        if self.verbose:
+            print('total evaluatios = {}'.format(eval_cnt))
+            print('gradient at stop position = {}'.format(-p))
+            print('found minimum position = {}, found minimum = {}'.format(x, fx))
+        stats['arg'] = np.array(stats['arg'])
+        stats['val'] = np.array(stats['val'])
+        stats['gradient'] = np.array(stats['gradient'])
+        return x, fnx, stats
