@@ -19,6 +19,7 @@ class optimizer(ABC):
 class adjust_optimizer(optimizer):
     def adjust(self, x0, obj):
         self.x0 = x0
+        self.variable = x0.ravel()
         arg, val, stats = self.optimise(obj)
         return arg, val, stats['evals']
     
@@ -142,7 +143,7 @@ class cma_es(adjust_optimizer):
         try:
             while iter_ < self.max_iter:
                 iter_ += 1
-                
+                print("\n " , mean,  "\n")
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 

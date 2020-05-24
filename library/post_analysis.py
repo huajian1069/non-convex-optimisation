@@ -5,6 +5,84 @@ from matplotlib.patches import Ellipse
 from matplotlib import patches
 import seaborn as sns
 
+class post_analy1d:
+    def __init__(self, stats, obj):
+        self.stats = stats
+        self.obj = obj
+        self.n = self.stats['val'].shape[0]
+        self.xs = np.linspace(np.min(self.stats['arg'])-2, np.max(self.stats['arg'])+2, 150)
+        self.fs = []
+        for x in self.xs:
+            self.fs.append(self.obj.func(x))
+            
+    def animate_moving_position(self):
+        def animate(i):
+            #plt.clf()
+            ax = fig.add_subplot(1, 1, 1)    
+            ax.set_title('iter=%d' % (i+1))
+            p = sns.scatterplot(x=arg[i], y=val[i], color="red", hue=i,
+                            hue_norm=(0, self.n), s=73,legend=False)
+            plt.plot(self.xs, self.fs, c="green")
+        if self.stats['arg'].shape[1] > 1:
+            # only leave the first column, the smallest candidate
+            arg = self.stats['arg'][:,0]
+            val = self.stats['val'][:,0]
+        else:
+            arg = self.stats['arg']
+            val = self.stats['val']
+        fig = plt.figure(figsize=(8,4))
+        ani = animation.FuncAnimation(fig, animate, frames=self.n-1, repeat=False, interval=500)
+        return ani
+    
+    def animate_moving_cluster(self):
+        def animate(i):
+            plt.clf()
+            ax = fig.add_subplot(1, 1, 1)    
+            ax.set_title('iter=%d' % (i+1))
+            ax.set_xlim(np.min(arg), np.max(arg))
+            ax.set_ylim(np.min(val), np.max(val))
+            ax.axvline(self.stats['mean'][i], c='blue', lw=1)
+            ax.axvline(self.stats['mean'][i] - 1 * self.stats['std'][i], c='grey', lw=1)
+            ax.axvline(self.stats['mean'][i] + 1 * self.stats['std'][i], c='grey', lw=1)
+            p = sns.scatterplot(x=arg[i], y=val[i], color="red", hue=i,
+                            hue_norm=(0, self.n), s=73,legend=False)
+            plt.plot(self.xs, self.fs, c="green")
+        arg = self.stats['arg'].squeeze()
+        val = self.stats['val'].squeeze()
+        fig = plt.figure(figsize=(8,4))
+        ani = animation.FuncAnimation(fig, animate, frames=self.n-1, repeat=False, interval=500)
+        return ani
+    
+    def plot_grandient_before_after(self):
+        x = np.arange(stats['gradient_before_after'].shape[0]-1)  # the label locations
+        width = 0.35  # the width of the bars
+        num = stats['gradient_before_after'].shape[2]
+
+        fig = plt.figure(figsize=(8, 4*num))
+        for i in range(num):
+            ax = fig.add_subplot(num, 1, i+1)
+            ax.bar(x-width/2, self.stats['gradient_before_after'][1:, 0, i], width, color="b", label='original')
+            ax.plot(x-width/2, self.stats['gradient_before_after'][1:, 0, i], color="b")
+
+            # Add some text for labels, title and custom x-axis tick labels, etc.
+            ax.set_ylabel('gradient')
+            if i == 0:
+                ax.set_title('gradient before and after adjustment')
+            #ax.set_xticks(x)
+            ax.set_yticks(np.linspace(-10, 10, 11))
+            ax.axhline(c='grey', lw=1)
+            ax.set_ylim(-14, 14)
+            ax.legend()
+
+            ax = ax.twinx()  
+            rects2 = ax.bar(x+width/2, self.stats['gradient_before_after'][1:, 1, i], width, color="y", label='moving averge')
+            ax.plot(x+width/2, self.stats['gradient_before_after'][1:, 1, i], color="y")
+            ax.set_ylabel('gradient')
+            #ax.set_xticks(x)
+            ax.set_yticks(np.linspace(-1, 1, 11))
+            ax.set_ylim(-1.4, 1.4)
+            ax.legend(loc='lower right') 
+
 class post_analysis_multiple_cloud():
     def __init__(self, points, res):
         self.points = points
