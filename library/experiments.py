@@ -48,8 +48,12 @@ class multiple_experiment:
         avg_evals = np.zeros_like(avg_res)
         mask = np.ones_like(avg_res, dtype=np.uint8)
         position_x = np.zeros_like(avg_res)
-        position_y = np.zeros_like(avg_res)
-        
+        position_y = np.zeros_like(avg_res)     
+        if self.sym and num_x == num_y:   
+            total_num = (num_x + 1) * num_x / 2
+        else:
+            total_num = num_x * num_y
+           
         for i, x in enumerate(np.arange(self.origin[0], abs_edge[0], self.step)):
             if self.sym:
                 abs_edge[1] = self.origin[1] + x + self.step 
@@ -72,6 +76,11 @@ class multiple_experiment:
                 avg_res[num_y-1-j, i] = np.mean(res)
                 avg_cost[num_y-1-j, i] = np.mean(costs)
                 avg_evals[num_y-1-j, i] = np.mean(evals)
+            if self.sym:
+                completed_num = (i + 1) * i / 2 + j + 1
+            else:
+                completed_num = i * num_y + j + 1
+            print("complete: {} / {} ".format(int(completed_num), int(total_num)))
         data = {'x': position_x, 
                 'y': position_y,
                 'mask': mask,

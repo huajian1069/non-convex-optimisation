@@ -140,6 +140,7 @@ class post_analysis_multiple_cloud():
 class post_analysis_multiple:
     def __init__(self, paras, data):
         self.paras = paras
+        self.data = data
         self.origin = paras['origin']
         self.edge = paras['edge']
         self.step = paras['step']

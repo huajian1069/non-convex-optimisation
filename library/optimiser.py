@@ -68,7 +68,7 @@ class cma_es(adjust_optimizer):
         def is_not_moving(arg, val, pre_arg, pre_val, tol):
             dis_arg = np.linalg.norm(arg - pre_arg)
             dis_val = np.linalg.norm(val - pre_val)
-            return (dis_arg < tol and dis_val < tol*1e5) or (dis_val < tol and dis_arg < tol*1e5) 
+            return (dis_arg < tol) or (dis_val < tol) 
 
         if self.verbose:
             print("\n\n*******starting optimisation from intitial mean: ", self.x0.ravel())
@@ -138,12 +138,13 @@ class cma_es(adjust_optimizer):
         val = f[idx]
         pre_arg = x_ascending
         pre_val = f[idx]
+        best_val = 1e4
+        best_arg = None
         
         # optimise by iterations
         try:
             while iter_ < self.max_iter:
                 iter_ += 1
-                print("\n " , mean,  "\n")
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
@@ -178,7 +179,9 @@ class cma_es(adjust_optimizer):
                 # stopping condition    
                 arg = x_ascending
                 val = f[idx]
-                
+                if best_val > val[0]:
+                    best_val = val[0]
+                    best_arg = arg[0]              
                 # check the stop condition
                 if np.max(D) > (np.min(D) * 1e6):
                     stats['status'] = 'diverge'
@@ -195,7 +198,7 @@ class cma_es(adjust_optimizer):
             if self.verbose:
                 print('eigenvalue of variance = {}'.format(D))
                 print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
-                print('found minimum position = {}, found minimum = {}'.format(arg[0], val[0]))
+                print('found minimum position = {}, found minimum = {}'.format(best_arg, best_val))
 
         # carry statistics info before quit
         if self.record:
@@ -206,7 +209,7 @@ class cma_es(adjust_optimizer):
             stats['evals_per_iter'] = np.array(stats['evals_per_iter'])
             stats['x_adjust'] = np.array(stats['x_adjust'])
         stats['evals'] = eval_
-        return arg[0], val[0], stats
+        return best_arg, best_val, stats
  
     
 class do_nothing(adjust_optimizer):
@@ -248,9 +251,9 @@ class adam(adjust_optimizer):
         self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
-        self.epsilon = 1e-8
+        self.epsilon = 1e-11
         self.max_iter = 10000
-        self.tol = 1e-2
+        self.tol = 1e-3
         self.verbose = verbose
         self.record = False
         self.x0 = np.zeros((dim,))
