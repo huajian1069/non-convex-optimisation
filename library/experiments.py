@@ -80,6 +80,7 @@ class multiple_experiment:
                 completed_num = (i + 1) * i / 2 + j + 1
             else:
                 completed_num = i * num_y + j + 1
+            print("cost: {}, prob: {}".format(avg_cost[num_y-1-j, i], avg_res[num_y-1-j, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
         data = {'x': position_x, 
                 'y': position_y,

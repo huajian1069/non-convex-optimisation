@@ -247,8 +247,8 @@ class round_off(adjust_optimizer):
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
-    def __init__(self, alpha=1.05):
-        self.alpha = 1.05
+    def __init__(self, alpha=0.01, verbose=False, dim=2):
+        self.alpha = 0.01
         self.beta_1 = 0.9
         self.beta_2 = 0.999
         self.epsilon = 1e-11
