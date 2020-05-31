@@ -4,6 +4,8 @@ from library.post_analysis import *
 from library.experiments import *
 
 class single_experiment:
+    def __init__(self, tol=0.1):
+        self.tol = tol
     def set_objective(self, objective_func):
         self.objective_func = objective_func
 
@@ -12,8 +14,8 @@ class single_experiment:
 
     def do(self):
         optimal, optimum, statistics = self.optimizer.optimise(self.objective_func)
-        if np.linalg.norm(optimal - self.objective_func.get_optimal()) < 1e-1 \
-        or np.linalg.norm(optimum - self.objective_func.get_optimum()) < 1e-1:
+        if np.linalg.norm(optimal - self.objective_func.get_optimal()) < self.tol \
+        or np.linalg.norm(optimum - self.objective_func.get_optimum()) < self.tol:
             statistics['status'] = 'global minimum'
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
@@ -23,7 +25,7 @@ class single_experiment:
         if self.optimizer.record == False:
             return statistics['status'], optimum, statistics['evals']
         else:
-            self.analyser = post_analysis(statistics, self.objective_func)
+            statistics
             
 class multiple_experiment:
     def set_sample_zone(self, paras):
@@ -82,11 +84,20 @@ class multiple_experiment:
                 completed_num = i * num_y + j + 1
             print("cost: {}, prob: {}".format(avg_cost[num_y-1-j, i], avg_res[num_y-1-j, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
+        if self.sym:
+            num = self.edge[0] / self.step
+            num = (num + 1) * num / 2
+        else:
+            num = num_x * num_y
+        print("avg probility of converge: ", data['res'].sum() / num)
+        print("avg cost: ", data['cost'].sum() / num)
+        print("avg evals per exp: ", data['evals'].sum() / num)
+        print("\n")
         data = {'x': position_x, 
                 'y': position_y,
                 'mask': mask,
                 'res': avg_res,
                 'cost': avg_cost,
-                'evals': avg_evals}
-        self.analyser = post_analysis_multiple(self.paras, data)
+                'evals': avg_evals
+                'paras': self.paras}
         return data

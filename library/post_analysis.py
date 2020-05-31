@@ -6,14 +6,11 @@ from matplotlib import patches
 import seaborn as sns
 
 class post_analy1d:
-    def __init__(self, stats, obj):
+    def __init__(self, stats):
         self.stats = stats
-        self.obj = obj
         self.n = self.stats['val'].shape[0]
-        self.xs = np.linspace(np.min(self.stats['arg'])-2, np.max(self.stats['arg'])+2, 150)
-        self.fs = []
-        for x in self.xs:
-            self.fs.append(self.obj.func(x))
+        #self.xs = np.linspace(np.min(self.stats['arg'])-2, np.max(self.stats['arg'])+2, 150)
+        self.trace = stats['trace']
             
     def animate_moving_position(self):
         def animate(i):
@@ -84,10 +81,10 @@ class post_analy1d:
             ax.legend(loc='lower right') 
 
 class post_analysis_multiple_cloud():
-    def __init__(self, points, res):
-        self.points = points
-        self.res = res
-        self.num = self.res.shape[0]
+    def __init__(self, stats):
+        self.points = stats['points']
+        self.res = stats['res']
+        self.num = stats['res'].shape[0]
     def plot_prob_vs_radius(self, *args):
         def count_global_min(res, points):        
             distance = np.linalg.norm(points, axis=1)
@@ -182,9 +179,10 @@ class post_analysis_multiple:
 
         
 class post_analysis():
-    def __init__(self, stats, obj):
+    def __init__(self, stats):
         self.stats = stats
-        self.obj = obj
+        self.optimal = stats['optimal']
+        self.optimum = stats['optimum']
     def print_mean_variance(self):
         # print mean and variance of each iteration
         for i, a in enumerate(self.stats['std']):
@@ -199,8 +197,8 @@ class post_analysis():
             print('iter=', i, '\nbefore\n', iter_[:2], '\nafter\n', iter_[2:], '\n') 
 
     def __cal_distance(self):
-        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.obj.get_optimal().reshape(1,1,2), axis=(1,2))
-        self.distance_val = np.linalg.norm(self.stats['val'] - self.obj.get_optimum(), axis=1)
+        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.optimal.reshape(1,1,2), axis=(1,2))
+        self.distance_val = self.stats['val']
             
     def plot_distance(self):
         self.__cal_distance()
@@ -219,7 +217,7 @@ class post_analysis():
                 ax.axvline(c='grey', lw=1)
                 ax.axhline(c='grey', lw=1)
                 # draw the position of optimal 
-                ax.scatter(self.obj.get_optimal()[0], self.obj.get_optimal()[1], c='red', s=15)
+                ax.scatter(self.optimal[0], self.optimal[1], c='red', s=15)
                 ax.scatter(x=self.stats['arg'][unit * (row * i + j),:,0], y=self.stats['arg'][unit * (row * i + j),:,1], 
                            c=self.stats['val'][unit * (row * i + j)], vmin = 0, vmax = 10)
                 ax.set_title("%d / %d"%(unit * (row * i + j), self.stats['arg'].shape[0]))
@@ -260,7 +258,7 @@ class post_analysis():
         ax.axvline(c='grey', lw=1)
         ax.axhline(c='grey', lw=1)
         # draw the position of optimal 
-        ax.scatter(self.obj.get_optimal()[0], self.obj.get_optimal()[1], c='red', s=15)
+        ax.scatter(self.optimal[0], self.optimal[1], c='red', s=15)
         # draw the trail of local minimum
         if 'trail' in self.stats.keys():
             ax.scatter(self.stats['trail'][0], self.stats['trail'][1], c='red', s=11)
