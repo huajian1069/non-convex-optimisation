@@ -45,12 +45,13 @@ class multiple_experiment:
         abs_edge[0] = self.origin[0] + self.edge[0]
         
         # initlise matrix to record results
-        avg_res = np.zeros((num_y, num_x))
-        avg_cost = np.zeros_like(avg_res)
-        avg_evals = np.zeros_like(avg_res)
-        mask = np.ones_like(avg_res, dtype=np.uint8)
-        position_x = np.zeros_like(avg_res)
-        position_y = np.zeros_like(avg_res)     
+        data = {}
+        data['convergence'] = np.zeros((num_y, num_x))
+        data['cost'] = np.zeros_like(data['convergence'])
+        data['evals'] = np.zeros_like(data['convergence'])
+        data['mask'] = np.ones_like(data['convergence'], dtype=np.uint8)
+        data['x'] = np.zeros_like(data['convergence'])
+        data['y'] = np.zeros_like(data['convergence'])     
         if self.sym and num_x == num_y:   
             total_num = (num_x + 1) * num_x / 2
         else:
@@ -63,9 +64,9 @@ class multiple_experiment:
                 abs_edge[1] = self.origin[1] + self.edge[1]
             for j, y in enumerate(np.arange(self.origin[1], abs_edge[1], self.step)):
                 points = np.random.rand(self.size, 2) * self.step + np.array([x, y]) 
-                mask[num_y-1-j, i] = 0
-                position_x[num_y-1-j, i] = x
-                position_y[num_y-1-j, i] = y
+                data['mask'][num_y-1-j, i] = 0
+                data['x'][num_y-1-j, i] = x
+                data['y'][num_y-1-j, i] = y
                 # calculate the probility of getting global minimum 
                 res = np.zeros((self.size, ))
                 costs = np.zeros_like(res)
@@ -75,29 +76,23 @@ class multiple_experiment:
                     status, costs[k], evals[k] = self.exp.do()
                     if(status == 'global minimum'):
                         res[k] = 1
-                avg_res[num_y-1-j, i] = np.mean(res)
-                avg_cost[num_y-1-j, i] = np.mean(costs)
-                avg_evals[num_y-1-j, i] = np.mean(evals)
+                data['convergence'][num_y-1-j, i] = np.mean(res)
+                data['cost'][num_y-1-j, i] = np.mean(costs)
+                data['evals'][num_y-1-j, i] = np.mean(evals)
             if self.sym:
                 completed_num = (i + 1) * i / 2 + j + 1
             else:
                 completed_num = i * num_y + j + 1
-            print("cost: {}, prob: {}".format(avg_cost[num_y-1-j, i], avg_res[num_y-1-j, i]) )
+            print("cost: {}, prob: {}".format(data['cost'][num_y-1-j, i], data['convergence'][num_y-1-j, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
         if self.sym:
             num = self.edge[0] / self.step
             num = (num + 1) * num / 2
         else:
             num = num_x * num_y
-        print("avg probility of converge: ", data['res'].sum() / num)
+        data['para'] = self.paras
+        print("avg probility of convergence: ", data['convergence'].sum() / num)
         print("avg cost: ", data['cost'].sum() / num)
         print("avg evals per exp: ", data['evals'].sum() / num)
         print("\n")
-        data = {'x': position_x, 
-                'y': position_y,
-                'mask': mask,
-                'res': avg_res,
-                'cost': avg_cost,
-                'evals': avg_evals
-                'paras': self.paras}
         return data

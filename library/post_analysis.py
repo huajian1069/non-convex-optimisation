@@ -134,7 +134,7 @@ class post_analysis_multiple_cloud():
         hue = self.res
         p = sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)
 
-class post_analysis_multiple:
+class post_analysis_zone:
     def __init__(self, data):
         self.paras = data['paras']
         self.origin = paras['origin']
@@ -143,7 +143,7 @@ class post_analysis_multiple:
         
         self.x = data['x']
         self.y = data['y']
-        self.prob = data['res']
+        self.prob = data['convergence']
         self.cost = data['cost']
         self.evals = data['evals']
         self.mask = data['mask']
@@ -178,7 +178,7 @@ class post_analysis_multiple:
 
 
         
-class post_analysis():
+class post_analysis_single():
     def __init__(self, stats):
         self.stats = stats
         self.optimal = stats['optimal']
