@@ -79,67 +79,13 @@ class post_analy1d:
             ax.set_yticks(np.linspace(-1, 1, 11))
             ax.set_ylim(-1.4, 1.4)
             ax.legend(loc='lower right') 
-
-class post_analysis_multiple_cloud():
-    def __init__(self, stats):
-        self.points = stats['points']
-        self.res = stats['res']
-        self.num = stats['res'].shape[0]
-    def plot_prob_vs_radius(self, *args):
-        def count_global_min(res, points):        
-            distance = np.linalg.norm(points, axis=1)
-            idx = np.argsort(distance)
-            dis_ascending = distance[idx]
-            res_ascending = res[idx]
-            prob = np.zeros((self.num, ))
-            for i in range(self.num):
-                prob[i] = np.sum(res_ascending[:i+1] == 1) / (i + 1) 
-            return dis_ascending, prob
-        argc = len(args)
-        assert argc%2 == 0
-        pair_cnt = int(argc / 2)
-        dis_ascendings = np.zeros((self.num, pair_cnt + 1))
-        probs = np.zeros((self.num, pair_cnt + 1))
-        dis_ascendings[:,0], probs[:,0] = count_global_min(self.res, self.points)
-        for i in range(pair_cnt):
-            dis_ascendings[:,i+1], probs[:,i+1] = count_global_min(args[i*2], args[i*2+1])
-        fig = plt.figure(figsize=(8,4))
-        ax = fig.add_subplot(1, 1, 1)
-        ax.set_xlim(0, np.max(dis_ascendings))
-        ax.set_ylim(0, 2)
-        ax.set_xlabel('distance from origin', fontsize=13)
-        ax.set_ylabel('prob of global minminum', fontsize=13)
-        for i in range(pair_cnt+1):
-            ax.plot(dis_ascendings[:,i], probs[:,i])
-        plt.show()
-
-    def plot_cloud_point(self):
-        fig = plt.figure(figsize=(7,7))
-        '''
-        # one quadrant
-        x1 = np.hstack((self.points[:,0], self.points[:,1]))
-        y1 = np.hstack((self.points[:,1], self.points[:,0]))
-        res1 = np.hstack((self.res, self.res))
-        # two qudrant
-        x2 = np.hstack((x1, -x1))
-        y2 = np.hstack((y1, y1))
-        res2 = np.hstack((res1, res1))
-        # four qudrant
-        x = np.hstack((x2, -x2))
-        y = np.hstack((y2, -y2))
-        hue = np.hstack((res2, res2))
-        '''
-        x = self.points[:,0]
-        y = self.points[:,1]
-        hue = self.res
-        p = sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)
-
+            
 class post_analysis_zone:
     def __init__(self, data):
         self.paras = data['paras']
-        self.origin = paras['origin']
-        self.edge = paras['edge']
-        self.step = paras['step']
+        self.origin = self.paras['origin']
+        self.edge = self.paras['edge']
+        self.step = self.paras['step']
         
         self.x = data['x']
         self.y = data['y']
@@ -165,16 +111,19 @@ class post_analysis_zone:
         fig = plt.figure(figsize=(13, 13))
         ax = sns.heatmap(self.prob, mask=self.mask, vmin=0, vmax=1, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
+        return ax
 
     def plot_hotmap_cost(self):
         fig = plt.figure(figsize=(13, 13))
         ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
+        return ax
 
     def plot_hotmap_evals(self):
         fig = plt.figure(figsize=(13, 13))
         ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")  
         self.__setup_axis(ax)
+        return ax
 
 
         
@@ -295,3 +244,57 @@ class post_analysis_single():
         fig = plt.figure(figsize=(8,4))
         ani = animation.FuncAnimation(fig, animate, frames=self.stats['val'].shape[0]-1, repeat=False, interval=500)
         return ani
+    
+class post_analysis_multiple_cloud():
+    def __init__(self, stats):
+        self.points = stats['points']
+        self.res = stats['res']
+        self.num = stats['res'].shape[0]
+    def plot_prob_vs_radius(self, *args):
+        def count_global_min(res, points):        
+            distance = np.linalg.norm(points, axis=1)
+            idx = np.argsort(distance)
+            dis_ascending = distance[idx]
+            res_ascending = res[idx]
+            prob = np.zeros((self.num, ))
+            for i in range(self.num):
+                prob[i] = np.sum(res_ascending[:i+1] == 1) / (i + 1) 
+            return dis_ascending, prob
+        argc = len(args)
+        assert argc%2 == 0
+        pair_cnt = int(argc / 2)
+        dis_ascendings = np.zeros((self.num, pair_cnt + 1))
+        probs = np.zeros((self.num, pair_cnt + 1))
+        dis_ascendings[:,0], probs[:,0] = count_global_min(self.res, self.points)
+        for i in range(pair_cnt):
+            dis_ascendings[:,i+1], probs[:,i+1] = count_global_min(args[i*2], args[i*2+1])
+        fig = plt.figure(figsize=(8,4))
+        ax = fig.add_subplot(1, 1, 1)
+        ax.set_xlim(0, np.max(dis_ascendings))
+        ax.set_ylim(0, 2)
+        ax.set_xlabel('distance from origin', fontsize=13)
+        ax.set_ylabel('prob of global minminum', fontsize=13)
+        for i in range(pair_cnt+1):
+            ax.plot(dis_ascendings[:,i], probs[:,i])
+        plt.show()
+
+    def plot_cloud_point(self):
+        fig = plt.figure(figsize=(7,7))
+        '''
+        # one quadrant
+        x1 = np.hstack((self.points[:,0], self.points[:,1]))
+        y1 = np.hstack((self.points[:,1], self.points[:,0]))
+        res1 = np.hstack((self.res, self.res))
+        # two qudrant
+        x2 = np.hstack((x1, -x1))
+        y2 = np.hstack((y1, y1))
+        res2 = np.hstack((res1, res1))
+        # four qudrant
+        x = np.hstack((x2, -x2))
+        y = np.hstack((y2, -y2))
+        hue = np.hstack((res2, res2))
+        '''
+        x = self.points[:,0]
+        y = self.points[:,1]
+        hue = self.res
+        p = sns.scatterplot(x=x, y=y, color="r", hue=hue, hue_norm=(0, 1), legend=False)

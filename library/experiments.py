@@ -1,4 +1,5 @@
 import numpy as np
+import time
 from library.optimiser import *
 from library.post_analysis import *
 from library.experiments import *
@@ -56,7 +57,8 @@ class multiple_experiment:
             total_num = (num_x + 1) * num_x / 2
         else:
             total_num = num_x * num_y
-           
+        
+        start = time.time()
         for i, x in enumerate(np.arange(self.origin[0], abs_edge[0], self.step)):
             if self.sym:
                 abs_edge[1] = self.origin[1] + x + self.step 
@@ -85,14 +87,15 @@ class multiple_experiment:
                 completed_num = i * num_y + j + 1
             print("cost: {}, prob: {}".format(data['cost'][num_y-1-j, i], data['convergence'][num_y-1-j, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
+        end = time.time()
         if self.sym:
             num = self.edge[0] / self.step
             num = (num + 1) * num / 2
         else:
             num = num_x * num_y
-        data['para'] = self.paras
+        data['paras'] = self.paras
         print("avg probility of convergence: ", data['convergence'].sum() / num)
         print("avg cost: ", data['cost'].sum() / num)
         print("avg evals per exp: ", data['evals'].sum() / num)
-        print("\n")
+        print("total time: {},  time per eval:{}\n".format(end - start, (end - start)/num/data['evals'].sum()))
         return data
