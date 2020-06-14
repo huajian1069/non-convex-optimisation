@@ -26,7 +26,9 @@ class single_experiment:
         if self.optimizer.record == False:
             return statistics['status'], optimum, statistics['evals']
         else:
-            statistics
+            statistics['optimal'] = self.objective_func.get_optimal()
+            statistics['optimum'] = self.objective_func.get_optimum()
+            return statistics
             
 class multiple_experiment:
     def set_sample_zone(self, paras):
