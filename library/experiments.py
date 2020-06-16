@@ -84,10 +84,10 @@ class multiple_experiment:
                 data['cost'][num_y-1-j, i] = np.mean(costs)
                 data['evals'][num_y-1-j, i] = np.mean(evals)
             if self.sym:
-                completed_num = (i + 1) * i / 2 + j + 1
+                completed_num = (i + 2) * (i + 1) / 2
             else:
-                completed_num = i * num_y + j + 1
-            print("cost: {}, prob: {}".format(data['cost'][num_y-1-j, i], data['convergence'][num_y-1-j, i]) )
+                completed_num = (i+1) * num_y 
+            print("cost: {}, prob: {}".format(data['cost'][0, i], data['convergence'][0, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
         end = time.time()
         if self.sym:

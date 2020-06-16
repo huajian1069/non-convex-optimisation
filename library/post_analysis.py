@@ -103,24 +103,24 @@ class post_analysis_zone:
         ax.set_yticklabels(self.ylabel)
         
     def plot_scatter(self):
-        fig = plt.figure(figsize=(10,10))
+        #fig = plt.figure(figsize=(10,10))
         sc = plt.scatter(self.x.ravel(), self.y.ravel(), c=self.prob.ravel(), marker='o', vmin=0, vmax=1, s=35, cmap='YlGnBu')
         plt.colorbar(sc)
         
     def plot_hotmap_prob(self):
-        fig = plt.figure(figsize=(13, 13))
+        #fig = plt.figure(figsize=(13, 13))
         ax = sns.heatmap(self.prob, mask=self.mask, vmin=0, vmax=1, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
         return ax
 
-    def plot_hotmap_cost(self):
-        fig = plt.figure(figsize=(13, 13))
-        ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")
+    def plot_hotmap_cost(self, max_cost):
+        #fig = plt.figure(figsize=(13, 13))
+        ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, vmax=max_cost, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
         return ax
 
     def plot_hotmap_evals(self):
-        fig = plt.figure(figsize=(13, 13))
+        #fig = plt.figure(figsize=(13, 13))
         ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")  
         self.__setup_axis(ax)
         return ax
@@ -146,8 +146,8 @@ class post_analysis_single():
             print('iter=', i, '\nbefore\n', iter_[:2], '\nafter\n', iter_[2:], '\n') 
 
     def __cal_distance(self):
-        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.optimal.reshape(1,1,2), axis=(1,2))
-        self.distance_val = self.stats['val']
+        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(1,1,2), axis=2).mean(axis=1)
+        self.distance_val = self.stats['val'].mean(axis=1)
             
     def plot_distance(self):
         self.__cal_distance()
@@ -244,6 +244,7 @@ class post_analysis_single():
         fig = plt.figure(figsize=(8,4))
         ani = animation.FuncAnimation(fig, animate, frames=self.stats['val'].shape[0]-1, repeat=False, interval=500)
         return ani
+    
     
 class post_analysis_multiple_cloud():
     def __init__(self, stats):

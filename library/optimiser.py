@@ -66,9 +66,9 @@ class cma_es(adjust_optimizer):
         def update_sigma(sigma, ps):
             return sigma * np.exp((cs / damps) * (np.linalg.norm(ps)/ chiN - 1))
         def is_not_moving(arg, val, pre_arg, pre_val, tol):
-            dis_arg = np.linalg.norm(arg - pre_arg)
-            dis_val = np.linalg.norm(val - pre_val)
-            return (dis_arg < tol) or (dis_val < tol) 
+            dis_arg = np.linalg.norm(arg - pre_arg, axis=1).mean()
+            dis_val = np.abs(val - pre_val).mean()
+            return (dis_arg < tol and dis_val < tol) 
 
         if self.verbose:
             print("\n\n*******starting optimisation from intitial mean: ", self.x0.ravel())
