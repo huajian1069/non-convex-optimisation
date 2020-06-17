@@ -87,7 +87,8 @@ class multiple_experiment:
                 completed_num = (i + 2) * (i + 1) / 2
             else:
                 completed_num = (i+1) * num_y 
-            print("cost: {}, prob: {}".format(data['cost'][0, i], data['convergence'][0, i]) )
+            num_current = int(num_y - (abs_edge[1]-self.origin[1])/self.step)
+            print("cost: {}, prob: {}".format(data['cost'][num_current, i], data['convergence'][num_current, i]) )
             print("complete: {} / {} ".format(int(completed_num), int(total_num)))
         end = time.time()
         if self.sym:
