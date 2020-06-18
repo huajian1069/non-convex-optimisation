@@ -158,7 +158,7 @@ class post_analysis_single():
     def plot_moving_cluster(self):
         fig = plt.figure(figsize=(9, 9))
         row = col = 3
-        unit = int(self.stats['val'].shape[0]/(row * col)/2)
+        unit = self.stats['val'].shape[0]/(row * col)
         for i in range(row):
             for j in range(col):
                 ax=fig.add_subplot(row, col, 1 + row * i + j)
@@ -167,11 +167,17 @@ class post_analysis_single():
                 ax.axhline(c='grey', lw=1)
                 # draw the position of optimal 
                 ax.scatter(self.optimal[0], self.optimal[1], c='red', s=15)
-                ax.scatter(x=self.stats['arg'][unit * (row * i + j),:,0], y=self.stats['arg'][unit * (row * i + j),:,1], 
-                           c=self.stats['val'][unit * (row * i + j)], vmin = 0, vmax = 10)
-                ax.set_title("%d / %d"%(unit * (row * i + j), self.stats['arg'].shape[0]))
-                plt.xlim([-4, 4])
-                plt.ylim([-4, 4])
+                ax.scatter(x=self.stats['arg'][int(unit * (row * i + j)),:,0], y=self.stats['arg'][int(unit * (row * i + j)),:,1], 
+                           c=self.stats['val'][int(unit * (row * i + j))], vmin = 0, vmax = 10)
+                # unify the x,y scope
+                min_x = np.min(self.stats['arg'][:,:,0])
+                min_y = np.min(self.stats['arg'][:,:,1])
+                max_x = np.max(self.stats['arg'][:,:,0])
+                max_y = np.max(self.stats['arg'][:,:,1])
+                print(min_x, max_x, min_y, max_y)
+                ax.set_xlim(min_x, max_x)
+                ax.set_ylim(min_x, max_y)
+                ax.set_title("%d / %d"%(int(unit * (row * i + j)), self.stats['arg'].shape[0]))
 
     def __plot_distance_common(self, ax1, i):
         ax1.plot(np.arange(i), self.distance_arg[1:i+1], color='green', label='Frobenius norm \nof parameters')
@@ -212,8 +218,13 @@ class post_analysis_single():
         if 'trail' in self.stats.keys():
             ax.scatter(self.stats['trail'][0], self.stats['trail'][1], c='red', s=11)
         # draw candidates on scatter plot
-        ax.set_xlim(np.min(self.stats['arg'][:,:,0]), np.max(self.stats['arg'][:,:,0]))
-        ax.set_ylim(np.min(self.stats['arg'][:,:,1]), np.max(self.stats['arg'][:,:,1]))
+        min_x = np.min(self.stats['arg'][:,:,0])
+        min_y = np.min(self.stats['arg'][:,:,1])
+        max_x = np.max(self.stats['arg'][:,:,0])
+        max_y = np.max(self.stats['arg'][:,:,1])
+        print(min_x, max_x, min_y, max_y)
+        ax.set_xlim(min_x, max_x)
+        ax.set_ylim(min_x, max_y)
         p = sns.scatterplot(x=self.stats['arg'][i,:,0], y=self.stats['arg'][i,:,1], color="r", hue=i, hue_norm=(0, self.stats['val'].shape[0]), legend=False)
         # draw ellipse representing 3 sigma areas of normal distribution
         self.__draw_ellipse(ax, self.stats['mean'][i], self.stats['std'][i])
@@ -243,8 +254,7 @@ class post_analysis_single():
         self.__cal_distance()
         fig = plt.figure(figsize=(8,4))
         ani = animation.FuncAnimation(fig, animate, frames=self.stats['val'].shape[0]-1, repeat=False, interval=500)
-        return ani
-    
+        return ani    
     
 class post_analysis_multiple_cloud():
     def __init__(self, stats):

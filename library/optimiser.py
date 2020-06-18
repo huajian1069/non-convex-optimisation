@@ -19,9 +19,7 @@ class optimizer(ABC):
 class adjust_optimizer(optimizer):
     def adjust(self, x0, obj):
         self.x0 = x0
-        self.variable = x0.ravel()
-        arg, val, stats = self.optimise(obj)
-        return arg, val, stats['evals']
+        return self.optimise(obj)
     
 class cma_es(adjust_optimizer):
     def __init__(self, dim=2):
@@ -115,6 +113,8 @@ class cma_es(adjust_optimizer):
         # --------------------  Initialization --------------------------------  
         x, x_old, f = np.zeros((lambda_, dim)), np.zeros((lambda_, dim)), np.zeros((lambda_,))
         stats = {}
+        inner_stats = {}
+        stats['inner'] = []
         stats['val'], stats['arg'] = [], []
         stats['x_adjust'] = []
         iter_eval, stats['evals_per_iter'] = np.zeros((lambda_, )), []
@@ -128,6 +128,7 @@ class cma_es(adjust_optimizer):
         idx = np.argsort(f)
         x_ascending = x[idx]
         if self.record:
+            stats['inner'].append(inner_stats)
             stats['arg'].append(x_ascending)
             stats['val'].append(f[idx])
             stats['mean'].append(mean)
@@ -149,9 +150,9 @@ class cma_es(adjust_optimizer):
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
                     x_old[i] = x[i]
-                    x[i], f[i], eval_cnt = self.adjust_func.adjust(x[i], obj)
-                    eval_ += eval_cnt
-                    iter_eval[i] = eval_cnt
+                    x[i], f[i], inner_stats = self.adjust_func.adjust(x[i], obj)
+                    eval_ += inner_stats['evals']
+                    iter_eval[i] = inner_stats['evals']
                 # sort the value and positions of solutions 
                 idx = np.argsort(f)
                 x_ascending = x[idx]
@@ -170,6 +171,7 @@ class cma_es(adjust_optimizer):
 
                 # record data during process for post analysis
                 if self.record:
+                    stats['inner'].append(inner_stats)
                     stats['arg'].append(x_ascending)
                     stats['val'].append(f[idx])
                     stats['mean'].append(mean)
