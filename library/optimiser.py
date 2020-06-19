@@ -118,6 +118,7 @@ class cma_es(adjust_optimizer):
         stats['val'], stats['arg'] = [], []
         stats['x_adjust'] = []
         iter_eval, stats['evals_per_iter'] = np.zeros((lambda_, )), []
+        inner_stats = [{}] * lambda_
         stats['mean'], stats['std'] = [], []
         stats['status'] = None
         iter_, eval_ = 0, 0
@@ -150,9 +151,9 @@ class cma_es(adjust_optimizer):
                 for i in range(lambda_):
                     x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
                     x_old[i] = x[i]
-                    x[i], f[i], inner_stats = self.adjust_func.adjust(x[i], obj)
-                    eval_ += inner_stats['evals']
-                    iter_eval[i] = inner_stats['evals']
+                    x[i], f[i], inner_stats[i] = self.adjust_func.adjust(x[i], obj)
+                    eval_ += inner_stats[i]['evals']
+                    iter_eval[i] = inner_stats[i]['evals']
                 # sort the value and positions of solutions 
                 idx = np.argsort(f)
                 x_ascending = x[idx]
@@ -171,7 +172,11 @@ class cma_es(adjust_optimizer):
 
                 # record data during process for post analysis
                 if self.record:
-                    stats['inner'].append(inner_stats)
+                    stats['inner'].append(inner_stats.copy())
+                    #for ii in range(iter_):
+                    #    for jj in range(6):
+                            #print(ii, jj)
+                            #print(stats['inner'][ii][jj]['arg'])
                     stats['arg'].append(x_ascending)
                     stats['val'].append(f[idx])
                     stats['mean'].append(mean)
@@ -369,6 +374,7 @@ class line_search(adjust_optimizer):
             eval_cnt += 2
             if self.record:
                 stats['arg'].append(x.copy())
+                #print(eval_cnt, stats['arg'])
                 stats['val'].append(fx)
                 stats['gradient'].append(-p)
             if np.linalg.norm(p) < self.tol:
