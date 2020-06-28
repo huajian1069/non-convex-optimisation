@@ -20,100 +20,28 @@ $\[ f_i(\alpha x + \beta y) \leq \alpha f_i(x) + \beta f_i(y), i=0, ..., m. \]$
   
 With $\alpha + \beta = 1, \alpha, \beta \geq 0$. Notice, the linear programming is a special case of convex optimisation: equality replaces the more general inequality.
 
-Nevertheless, in the context of neural network training and computer version challenges, the objective function is almost always non-linear and non-convex. Traditional techniques for general non-convex problems involve compromises. Local optimisation methods, like gradient descent, provide no information about distance to global optimum. Global optimisation method has worst-case complexity growing exponentially with problem size. As the abstraction of real CV problems, we could assume the objective function is non-convex, differentiable, and there are no constraint functions. The pursuing of better optimisation method should be based on these assumptions. 
-
-In this project, I work on improving a global optimisation method-covariance matrix adaptation evolution strategy(CMA-ES) by exploiting **differentiablity**. Evolution strategies (ES) are stochastic, derivative-free methods for numerical optimization of non-convex continuous optimization problems. But it seems a pity that it ignores the built-in differentiablity of objective function in the context of neural network training. Therefore, the aim of this project is to integrate the information of gradient, find a better way to adjust the moving of particles in CMA-ES, get more guarantee of reaching global optimum with reasonable time cost. 
-
-Also, based on my previous background, the methodology used in this project relies more on getting insights of optimisation method by **visualization**. Works will be more based on coding, testing, numerical experiments rather than theoretical proof. But I will combine some theoretical reasoning when necessary.  
-
-## Progress
-To simplify the development of new/improved optimisation method, we choose to begin with some common test functions of optimisation method as benchmark. [Ackley function](https://en.wikipedia.org/wiki/Ackley_function) is used in the first few weeks. Now I change to the other items on [the list](https://www.sfu.ca/~ssurjano/optimization.html).
-
-### Week 1,2: 
-
-Test on frist objective function: Ackley $$ f(x) = -a \exp \left\{ -b\sqrt{ \frac{1}{d} \sum_{i=1}^{d} x_i^2 }\right\} - \exp\left\{ \frac{1}{d} \sum_{i=1}^{d} \cos\left(c x_i \right) \right\} + a + e $$
-$$a = 20, b = 0.2, d = 2, c = 2 \pi$$ 
-
-- made some 2D scatter and 3D surface visualisation tools for Ackley function. 
-- wrote the code of pure CMA-ES in python according to Wiki Matlab version and CMA-ES combined with line search algorithm.
-- Interesting finding: experiments show CMA-ES-line-search performs much better than pure CMA-ES, especially when the initial mean of optimization variable candidates is far away from optimal.   
-
-### Week 3,4:
-- made animations about optimisation process: moving clusters of candidate parameters
-- observed the round-off effect of line search, therefore add a round-off version of CMA-ES. It is not valuable by itself, but it indicates the strong relationship between local optimal and global optimal. Maybe there exist a large class of real problem where a similar relationship also exists. Then the optimisation problem will be cast to a noise-reducing problem. The key to solve this class of optimisation is to identify noise(often behaved in form of local optimal/high frequency part) and recover global information(often behaved as global optimal/low frequency part). I am still not sure how to identify the existence of this prior knowledge in objective function and how to take advantage of this inspiration. One potential way: Fourier transform.    
-
-### week 5:
-- added the visualisation of 2D normal distribution as ellipse
-- refactored the code by class
-- drawed the point cloud of global optimum convergence, first nice enough work to be included in final report 
-
-### week 6:
-
-Test on frist objective function: Bukin $$ f(x) = 100 \sqrt{|x_2 - 0.01x_1^2|} + 0.01|x_1 + 10| $$
-It has some intractable properties, like indifferentiable along the ridge, global optimal located at one point on the ridge. Original CMA-ES and CMA-ES with line search can still directly apply to this case, with some careful tuning of hyperparameters, defining zero gradient at indifferentiable point. Original CMA-ES hardly converges to global optimal, most of time ends with stopping on ridge. CMA-ES with line search has more chance to diverge. But after adopting a very small initial step size, it can converge to global optimal in 40 out of 50 cases. So I think cma-es with line search still outperforms well in Bukin case.
-- studyed Bukin objective function. This is interesting. Becasuse the global minima is slightly smaller than the other points on the ridge, while the points on the ridge are much smaller than the other points outside the ridge. So it is difficult to move toward global minima along the ridge, especially given the fact the ridge is a parabolic curve and shape of CMA is elliptic. The great news is that line search with small step-size still improves the original CMA a lot.  
-- In Bukin case, objective function is still composed of two parts. But high frequency part is not just noise, it contains global information. Low frequenca part is delicate and need special treatment.
-- Implemented one-step line search CMA-ES. It behaves more like original CMA-ES.
-
-### week 12: 
-
-In case of original Ackley objective function, with medium step size, orginal CMA-ES costs 20x time than Adam. line search CMA-ES costs 10x time than original CMA-ES. But improvements on convergence probility is also significant. From 0 to 0.03, from 0.03 to 0.41. 
-
-## summary on original ackley
-| -- |original CMA | line search - CMA(medium step size) | adam |
-| -- | -- | -- | -- | 
-| #experiments| 150 experiments | 150 experiments | 150 experiments |
-| total time| 13.1 s | 180 s | 0.5 s |
-| evalutaions per exp | 1.46 k evals |  7.1 k evals |  0.063 k evals |
-| *performance*  | -- | -- | --|
-| probability |  0.03  | 0.41 | 0 |
+Nevertheless, in the state of art application of computer vision, researcher begin to investigate Geometric Deep Learning, i.e., learning a representation of 3D mesh in a latent code space(like 256 dimension). How to optimise this problem is a non-convex optimisation problem. 
 
 
-## summary on  ackley
-| -- |original CMA | line search (default(medium) step size) - CMA  | round off - CMA|
-| -- | -- | --| -- |
-| #experiments| 100 experiments | 100 experiments | 100 experiments |
-| total time| 3.9 s | 33.8 s |  2.8 s |
-| evalutaions per exp | 0.6 k evals |  11.5 k evals | 0.3 k evals |
-| *performance* | -- | -- | -- |
-| probability |  0.75  | 0.8 | 0.25 |
-| cost | 2.48 | 2.20 | 6.97 |
+In this project, I work on improving a global optimisation method-covariance matrix adaptation evolution strategy(CMA-ES) by exploiting **differentiablity**. In short, CMA-ES is very likely the most successful evolution stragety, with solid mathematics foundation. But it ignore the information of gradient, this is a pity in above optimisation problem. 
 
+My stragety is to inject an inner optimiser into CMA-ES. Here is the demo of results when using this new optimiser on Ackley benchmark function.
+Throughout all the semester, I tested several off-the-shelf optimiser and my proposed composite optimiser on BENCHMARK functions(like Ackley), rather than real computer vision problems.  
 
-## summary on tunned ackley
-| -- |original CMA | line search (default(medium) step size) - CMA  | round off - CMA|
-| -- | -- | --| -- |
-| #experiments| 100 experiments | 100 experiments | 100 experiments |
-| total time| 3.9 s | 33.8 s |  2.8 s |
-| evalutaions per exp | 0.6 k evals |  11.5 k evals | 0.3 k evals |
-| *performance* | -- | -- | -- |
-| probability |  0.75  | 0.8 | 0.25 |
-| cost | 2.48 | 2.20 | 6.97 |
+(cma-line)[figures/cma-line-search.gif]
 
-## Schedule
-### short term
-- [x] test more objective functions
-- [x] plot grid plot of convergence
-- [ ] clear conclusition about convergence improvement
-- [ ] clear conclusition about additional computation time
+If you are interested, please refer to my report and presentation slides. By now, this semester project has been completed. But I will continue to extend the optimiser to be applied on a real 3D mesh reconstruction/shape optimisation problem in the summer as an intern or RA in the lab. This will be a real world computer vision challenge, called MeshSDF[4], a very recent work submitted at June 2020.
 
-### long term
-- [ ] Look forward more theoerical guidance: read books and browse slides about convex optimisation.
-- [ ] Also, I wonder how does anyone else tackle this problem, especially in context of neural network training.
-- [ ] How does CMA-ES behave compared with other heuristic method? like particle swarm optimisation(PSO), Ant colony optimisation(ACO).
 
 ## Feedback
 Open to hear some voice from you, you can write your ideas or any other comments by opening an issue. If you are interested to contribute to this project, welcome create your pull request.
 
-I will keep on updating this repository during spring semester 2020. 
 
-Anyway, it is assuring to share, to be open, to have a little influence in the world.
 
 ## Reference
 
 1. CMA-ES [https://en.wikipedia.org/wiki/CMA-ES]
 2. Test Objective function [https://www.sfu.ca/~ssurjano/optimization.html]
 3. Convex Optimization – Boyd and Vandenberghe [https://web.stanford.edu/~boyd/cvxbook/]
-4. Particle Swarm Optimisation [https://en.wikipedia.org/wiki/Particle_swarm_optimization]
+4. MeshSDF: Differentiable Iso-Surface Extraction [https://arxiv.org/abs/2006.03997]
 
-   PSO appliction on robots project [https://github.com/huajian1069/Distributed-Intelligent-System.git]
