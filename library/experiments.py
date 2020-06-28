@@ -4,6 +4,26 @@ from library.optimiser import *
 from library.post_analysis import *
 from library.experiments import *
 
+def do_multiple_exps(obj, opt, zoneParas):
+    # init multiple experiments
+    mexps = multiple_experiment()
+
+    # init one experiment
+    exp = single_experiment()
+    
+    # One experiment: setup objective function and optimiser
+    exp.set_objective(obj)
+    exp.set_optimizer(opt)
+
+    # Multiple experiment: setup one expreiment
+    mexps.set_single_exp(exp)
+    # Multiple experiment: setup sample zone    
+    mexps.set_sample_zone(zoneParas)
+    
+    data = mexps.do()
+    
+    return data
+
 class single_experiment:
     def __init__(self, tol=0.1):
         self.tol = tol

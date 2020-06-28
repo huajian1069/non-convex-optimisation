@@ -173,10 +173,6 @@ class cma_es(adjust_optimizer):
                 # record data during process for post analysis
                 if self.record:
                     stats['inner'].append(inner_stats.copy())
-                    #for ii in range(iter_):
-                    #    for jj in range(6):
-                            #print(ii, jj)
-                            #print(stats['inner'][ii][jj]['arg'])
                     stats['arg'].append(x_ascending)
                     stats['val'].append(f[idx])
                     stats['mean'].append(mean)
