@@ -28,7 +28,7 @@ In this project, I work on improving a global optimisation method-covariance mat
 My stragety is to inject an inner optimiser into CMA-ES. Here is the demo of results when using this new optimiser on Ackley benchmark function.
 Throughout all the semester, I tested several off-the-shelf optimiser and my proposed composite optimiser on BENCHMARK functions(like Ackley), rather than real computer vision problems.  
 
-(cma-line)[figures/cma-line-search.gif]
+![cma-line](figures/cma-line-search.gif)
 
 If you are interested, please refer to my report and presentation slides. By now, this semester project has been completed. But I will continue to extend the optimiser to be applied on a real 3D mesh reconstruction/shape optimisation problem in the summer as an intern or RA in the lab. This will be a real world computer vision challenge, called MeshSDF[4], a very recent work submitted at June 2020.
 
