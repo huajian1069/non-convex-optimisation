@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from abc import ABC, abstractmethod
 
 import seaborn as sns
@@ -107,7 +108,7 @@ class ackley(objective_func):
         self.optimum = 0
         self.lim = 5
         self.dim = dim
-        self.optimal = np.zeros((self.dim, ))
+        self.optimal = torch.zeros((self.dim, ))
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
@@ -118,15 +119,15 @@ class ackley(objective_func):
         symmetric along x=0, y=0, y=x lines
         disappearing global gradient when far away from optimal
         '''
-        arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())
-        arg2 = np.cos(2*np.pi*x).mean()
-        return -20. * np.exp(arg1) - np.exp(arg2) + 20. + np.e
+        arg1 = -0.2 * torch.sqrt(torch.pow(x, 2).mean())
+        arg2 = torch.cos(2*np.pi*x).mean()
+        return -20. * torch.exp(arg1) - torch.exp(arg2) + 20. + np.e
     def dfunc(self, x):
-        if np.linalg.norm(x) < 1e-3:
-            return np.zeros((self.dim, ))
-        arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())
-        arg2 = np.cos(2*np.pi*x).mean()
-        g = lambda xx: -0.8 * xx / arg1 * np.exp(arg1) / self.dim + 2 * np.pi * np.sin(2 * np.pi * xx) * np.exp(arg2) / self.dim
+        if torch.norm(x) < 1e-3:
+            return torch.zeros((self.dim, ))
+        arg1 = -0.2 * torch.sqrt(torch.pow(x, 2).mean())
+        arg2 = torch.cos(2*np.pi*x).mean()
+        g = lambda xx: -0.8 * xx / arg1 * torch.exp(arg1) / self.dim + 2 * np.pi * torch.sin(2 * np.pi * xx) * torch.exp(arg2) / self.dim
         return g(x)
     def get_optimal(self):
         return self.optimal
