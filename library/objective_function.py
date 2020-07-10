@@ -134,7 +134,7 @@ class ackley(objective_func):
     def get_optimum(self):
         return self.optimum
     
-class bukin(objective_func):
+class bukin():
     '''
     non-disappearing gradient
     large gradient and uncontinuous gradient around ridge/local optimal
@@ -146,11 +146,11 @@ class bukin(objective_func):
         self.optimum = 0
         self.lim = 15
     def func(self, x):
-        return 100 * np.sqrt(np.abs(x[1] - 0.01 * x[0]**2)) + 0.01 * np.abs(x[0] + 10)
+        return 100 * torch.sqrt(torch.abs(x[1] - 0.01 * x[0]**2)) + 0.01 * torch.abs(x[0] + 10)
     def dfunc(self, x):
         arg1 = x[1] - 0.01 * x[0]**2
-        arg2 = 50 / np.sqrt(np.abs(arg1)) * np.sign(arg1) if arg1 != 0 else 0
-        return np.array([- 0.02 * x[1] * arg2 + 0.01 * np.sign(x[0] + 10), arg2])
+        arg2 = 50 / torch.sqrt(torch.abs(arg1)) * torch.sign(arg1) if arg1 != 0 else 0
+        return torch.tensor([- 0.02 * x[0] * arg2 + 0.01 * torch.sign(x[0] + 10), arg2])
     def get_optimal(self):
         return self.optimal
     def get_optimum(self):
