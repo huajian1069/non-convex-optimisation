@@ -159,38 +159,38 @@ class bukin():
 class eggholder(objective_func):
     # evaluated domain: 
     def __init__(self):
-        self.optimal = np.array([522, 413])
+        self.optimal = torch.tensor([522, 413])
         self.optimum = 0
         self.lim = 550
     def func(self, x):
-        if np.abs(x[0]) > self.lim or np.abs(x[1]) > self.lim:
-            return 2e3
+        if torch.abs(x[0]) > self.lim or torch.abs(x[1]) > self.lim:
+            return torch.tensor([2e3], requires_grad=True)
         arg1 = x[0]/2 + (x[1] + 47) 
         arg2 = x[0]   - (x[1] + 47)
-        f = lambda xx: np.sin(np.sqrt(np.abs(xx)))
+        f = lambda xx: torch.sin(torch.sqrt(torch.abs(xx)))
         return -(x[1] + 47) * f(arg1) - x[0] * f(arg2) + 976.873
     def dfunc(self, x):
-        if np.abs(x[0]) > self.lim or np.abs(x[1]) > self.lim:
-            return np.array([0, 0])
+        if torch.abs(x[0]) > self.lim or torch.abs(x[1]) > self.lim:
+            return torch.tensor([0, 0])
         arg1 = x[0]/2 + (x[1] + 47) 
         arg2 = x[0]   - (x[1] + 47)
-        g = lambda xx: np.cos(np.sqrt(np.abs(xx)))/np.sqrt(np.abs(xx))/2*np.sign(xx)
+        g = lambda xx: torch.cos(torch.sqrt(torch.abs(xx)))/torch.sqrt(torch.abs(xx))/2*torch.sign(xx)
         f1 = (x[1] + 47) * g(arg1)
         f2 = x[0] * g(arg2)
-        return np.array([-f1/2 - np.sin(arg2) - f2, \
-                         -f1   - np.sin(arg1) + f2])
+        return torch.tensor([-f1/2 - torch.sin(torch.sqrt(torch.abs(arg2))) - f2, \
+                         -f1 - torch.sin(torch.sqrt(torch.abs(arg1))) + f2])
     def get_optimal(self):
         return self.optimal
     def get_optimum(self):
         return self.optimum
     
-class tuned_ackley(objective_func):
+class tuned_ackley():
     # evaluated domain: circle with radius 19
     def __init__(self, lim=22, dim=2):
         self.optimum = 0
         self.lim = lim
         self.dim = dim
-        self.optimal = np.zeros((self.dim, ))
+        self.optimal = torch.zeros((self.dim, ))
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
@@ -199,20 +199,20 @@ class tuned_ackley(objective_func):
         symmetric along x=0, y=0, y=x lines
         disappearing global gradient when far away from optimal
         '''
-        if np.linalg.norm(x) > self.lim:
-            return 5e1
-        arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())
-        arg2 = 0.5 * np.cos(np.pi*x).mean()
-        return -20. * np.exp(arg1) - 0.1 * arg1**4 * np.exp(arg2) + 20.
+        if torch.norm(x) > self.lim:
+            return torch.tensor([5e1], requires_grad=True)
+        arg1 = -0.2 * torch.sqrt(torch.pow(x, 2).mean())
+        arg2 = 0.5 * torch.cos(np.pi*x).mean()
+        return -20. * torch.exp(arg1) - 0.1 * arg1**4 * torch.exp(arg2) + 20.
     def dfunc(self, x):
-        if np.linalg.norm(x) < 1e-3:
-            return np.zeros((self.dim,))
-        elif np.linalg.norm(x) > self.lim:
-            return np.zeros((self.dim, ))
-        arg1 = -0.2 * np.sqrt(np.power(x, 2).mean())
-        arg2 = 0.5 * np.cos(np.pi*x).mean()
-        g = lambda xx: -0.8 * xx / arg1 * np.exp(arg1) / self.dim + np.pi/20 * arg1**4 * np.sin(np.pi * xx) * np.exp(arg2) / self.dim \
-                         - 4 * xx/6250 * np.exp(arg2) * np.power(x, 2).sum() / self.dim**2
+        if torch.norm(x) < 1e-3:
+            return torch.zeros((self.dim,))
+        elif torch.norm(x) > self.lim:
+            return torch.zeros((self.dim, ))
+        arg1 = -0.2 * torch.sqrt(torch.pow(x, 2).mean())
+        arg2 = 0.5 * torch.cos(np.pi*x).mean()
+        g = lambda xx: -0.8 * xx / arg1 * torch.exp(arg1) / self.dim + np.pi/20 * arg1**4 * torch.sin(np.pi * xx) * torch.exp(arg2) / self.dim \
+                         - 4 * xx/6250 * torch.exp(arg2) * torch.power(x, 2).sum() / self.dim**2
         return g(x)
     def get_optimal(self):
         return self.optimal
