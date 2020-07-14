@@ -277,7 +277,7 @@ class adam(adjust_optimizer):
         m_t = 0 
         v_t = 0 
         eval_cnt = 0
-        x = self.x0.copy().ravel()
+        x = self.x0.clone()#.reshape(-1,1)
         stats = {}
         stats['status'] = None
         stats['gradient_before_after'] = []
@@ -296,7 +296,7 @@ class adam(adjust_optimizer):
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
             m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
             v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
-            x_prev = x.copy()								
+            x_prev = x.clone()								
             est_df = (m_cap)/(np.sqrt(v_cap)+self.epsilon)
             x -= self.alpha * est_df 	#updates the parameters
             if self.record:
@@ -340,7 +340,7 @@ class line_search(adjust_optimizer):
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0.copy().ravel()
+        x = self.x0.clone()
         alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
