@@ -1,5 +1,7 @@
 import numpy as np
+import torch
 from abc import ABC, abstractmethod
+
 
 class optimizer(ABC):
     @abstractmethod
@@ -9,7 +11,7 @@ class optimizer(ABC):
         '''
         pass
     @abstractmethod
-    def optimise(self, objective_cls):
+    def optimise(self, obj):
         '''
         input: objective function class
         output: empirical found optimal, optimum, and statistics of procedure information
@@ -276,7 +278,7 @@ class adam(adjust_optimizer):
         m_t = 0 
         v_t = 0 
         eval_cnt = 0
-        x = self.x0.clone()#.reshape(-1,1)
+        x = self.x0
         stats = {}
         stats['status'] = None
         stats['gradient_before_after'] = []
