@@ -24,8 +24,8 @@ class adjust_optimizer(optimizer):
 class cma_es(adjust_optimizer):
     def __init__(self, dim=2):
         self.dim = dim
-        paras = {'x0': np.zeros((dim,)),
-                 'std': np.ones((dim,)) * 3, 
+        paras = {'x0': torch.zeros((dim,)),
+                 'std': torch.ones((dim,)) * 3, 
                  'tol': 1e-5, 
                  'adjust_func': do_nothing(), 
                  'record': False, 
@@ -53,37 +53,36 @@ class cma_es(adjust_optimizer):
         def update_mean(x):
             return (weights @ x).reshape(dim, 1)
         def update_ps(ps, sigma, C, mean, mean_old):
-            return (1 - cs) * ps + np.sqrt(cs * (2 - cs) * mueff) * invsqrtC @ (mean - mean_old) / sigma 
+            return (1 - cs) * ps + torch.sqrt(cs * (2 - cs) * mueff) * invsqrtC @ (mean - mean_old) / sigma 
         def update_pc(pc, sigma, ps, mean, mean_old):
-            hsig = np.abs(ps) / np.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < 1.4 + 2/(dim + 1)
-            return (1 - cc) * pc + hsig * np.sqrt(cc * (2 - cc) * mueff) * (mean - mean_old) / sigma
+            hsig = (torch.norm(ps) / torch.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < 1.4 + 2/(dim + 1)).int()
+            return (1 - cc) * pc + hsig * torch.sqrt(cc * (2 - cc) * mueff) * (mean - mean_old) / sigma
         def update_C(C, pc, x, mean_old, sigma):
-            hsig = np.abs(ps) / np.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < 1.4 + 2/(dim + 1)
+            hsig = (torch.norm(ps) / torch.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < (1.4 + 2/(dim + 1))).int()
             artmp = (1 / sigma) * (x - mean_old.reshape(1, dim))
-            return (1 - c1 - cmu) * C + c1 * (pc * pc.T + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.T @ np.diag(weights) @ artmp
+            return (1 - c1 - cmu) * C + c1 * (pc * pc.T + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.T @ torch.diag(weights) @ artmp
         def update_sigma(sigma, ps):
-            return sigma * np.exp((cs / damps) * (np.linalg.norm(ps)/ chiN - 1))
+            return sigma * torch.exp((cs / damps) * (torch.norm(ps)/ chiN - 1))
         def is_not_moving(arg, val, pre_arg, pre_val, tol):
-            dis_arg = np.linalg.norm(arg - pre_arg, axis=1).mean()
-            dis_val = np.abs(val - pre_val).mean()
+            dis_arg = torch.norm(arg - pre_arg, dim=1).mean()
+            dis_val = torch.abs(val - pre_val).mean()
             return (dis_arg < tol and dis_val < tol) 
 
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial mean: ", self.x0.ravel())
+            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze())
         # User defined input parameters 
         dim = self.dim
         sigma = 0.3
         D = self.std / sigma
         mean = self.x0.reshape(dim, 1)
-
         # the size of solutions group
         lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
         # only best "mu" solutions are used to generate iterations
         mu = int(lambda_ / 2) if self.survival_size == None else self.survival_size
         # used to combine best "mu" solutions                                               
-        weights = np.log(mu + 1/2) - np.log(np.arange(mu) + 1) 
-        weights = weights / np.sum(weights)     
-        mueff = np.sum(weights)**2 / np.sum(weights**2) 
+        weights = np.log(mu + 1/2) - torch.log(torch.arange(mu, dtype=torch.float) + 1) 
+        weights = (weights / torch.sum(weights)).float()    
+        mueff = 1 / torch.sum(weights**2) 
 
         # Strategy parameter setting: Adaptation
         # time constant for cumulation for C
@@ -99,32 +98,32 @@ class cma_es(adjust_optimizer):
 
         # Initialize dynamic (internal) strategy parameters and constants
         # evolution paths for C and sigma
-        pc = np.zeros((dim, 1))     
-        ps = np.zeros((dim, 1)) 
+        pc = torch.zeros((dim, 1))     
+        ps = torch.zeros((dim, 1)) 
         # B defines the coordinate system
-        B = np.eye(dim)       
+        B = torch.eye(int(dim))       
         # covariance matrix C
-        C = B * np.diag(D**2) * B.T 
+        C = B * torch.diag(D**2) * B.T 
         # C^-1/2 
-        invsqrtC = B * np.diag(D**-1) * B.T   
+        invsqrtC = B * torch.diag(D**-1) * B.T   
         # expectation of ||N(0,I)|| == norm(randn(N,1)) 
         chiN = dim**0.5 * (1 - 1/(4 * dim) + 1 / (21 * dim**2))  
 
         # --------------------  Initialization --------------------------------  
-        x, x_old, f = np.zeros((lambda_, dim)), np.zeros((lambda_, dim)), np.zeros((lambda_,))
+        x, x_old, f = torch.zeros((lambda_, dim)), torch.zeros((lambda_, dim)), torch.zeros((lambda_,))
         stats = {}
         inner_stats = {}
         stats['inner'] = []
         stats['val'], stats['arg'] = [], []
         stats['x_adjust'] = []
-        iter_eval, stats['evals_per_iter'] = np.zeros((lambda_, )), []
+        iter_eval, stats['evals_per_iter'] = torch.zeros((lambda_, )), []
         inner_stats = [{}] * lambda_
         stats['mean'], stats['std'] = [], []
         stats['status'] = None
         iter_, eval_ = 0, 0
         # initial data in record
         for i in range(lambda_):
-            x[i] = (mean + np.random.randn(dim, 1)).ravel()
+            x[i,:] = (mean + torch.randn(dim, 1)).squeeze()
             f[i] = obj.func(x[i])
         idx = np.argsort(f)
         x_ascending = x[idx]
@@ -133,8 +132,8 @@ class cma_es(adjust_optimizer):
             stats['arg'].append(x_ascending)
             stats['val'].append(f[idx])
             stats['mean'].append(mean)
-            stats['std'].append(sigma * B @ np.diag(D))
-            stats['evals_per_iter'].append(np.ones((lambda_,)))
+            stats['std'].append(sigma * B @ torch.diag(D))
+            stats['evals_per_iter'].append(torch.ones((lambda_,)))
             stats['x_adjust'].append(np.vstack((x.T.copy(), x.T.copy())))
         arg = x_ascending
         val = f[idx]
@@ -149,7 +148,7 @@ class cma_es(adjust_optimizer):
                 iter_ += 1
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
-                    x[i] = (mean + sigma * B @ np.diag(D) @ np.random.randn(dim, 1)).ravel() 
+                    x[i] = (mean + sigma * B @ torch.diag(D) @ torch.randn(dim, 1)).squeeze()
                     x_old[i] = x[i]
                     x[i], f[i], inner_stats[i] = self.adjust_func.adjust(x[i], obj)
                     eval_ += inner_stats[i]['evals']
@@ -165,10 +164,10 @@ class cma_es(adjust_optimizer):
                 pc =   update_pc(pc, sigma, ps, mean, mean_old)
                 sigma = update_sigma(sigma, ps)
                 C =    update_C(C, pc, x_ascending[:mu], mean_old, sigma)
-                C = np.triu(C) + np.triu(C, 1).T
-                D, B = np.linalg.eig(C)
-                D = np.sqrt(D)
-                invsqrtC = B @ np.diag(D**-1) @ B
+                C = torch.triu(C) + torch.triu(C, 1).T
+                D, B = torch.eig(C, eigenvectors=True)
+                D = torch.sqrt(D[:,0])
+                invsqrtC = B @ torch.diag(D**-1) @ B
 
                 # record data during process for post analysis
                 if self.record:
@@ -186,7 +185,7 @@ class cma_es(adjust_optimizer):
                     best_val = val[0]
                     best_arg = arg[0]              
                 # check the stop condition
-                if np.max(D) > (np.min(D) * 1e6):
+                if torch.max(D) > (torch.min(D) * 1e6):
                     stats['status'] = 'diverge'
                     print('diverge, concentrate in low dimension manifold')
                     break
@@ -222,7 +221,7 @@ class do_nothing(adjust_optimizer):
         self.stats['evals'] = 1
         self.verbose = False
         self.record = False
-        self.x0 = np.zeros((dim,))
+        self.x0 = torch.zeros((dim,))
         self.verbose = verbose
     def set_parameters(self, paras):
         self.verbose = paras['verbose']
@@ -239,7 +238,7 @@ class round_off(adjust_optimizer):
         self.stats['evals'] = 1
         self.verbose = False
         self.record = False
-        self.x0 = np.zeros((dim,))
+        self.x0 = torch.zeros((dim,))
         self.verbose = verbose
     def set_parameters(self, paras):
         self.verbose = paras['verbose']
@@ -259,7 +258,7 @@ class adam(adjust_optimizer):
         self.tol = 1e-3
         self.verbose = verbose
         self.record = False
-        self.x0 = np.zeros((dim,))
+        self.x0 = torch.zeros((dim,))
         
     def set_parameters(self, paras):
         self.paras = paras
@@ -284,11 +283,11 @@ class adam(adjust_optimizer):
         stats['arg'] = []
         stats['val'] = []
         if self.record:
-            stats['arg'].append(x.copy())
+            stats['arg'].append(x.clone())
             stats['val'].append(obj.func(x))
             stats['gradient_before_after'].append([obj.dfunc(x), obj.dfunc(x)])
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial point: ", self.x0.ravel())
+            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze())
         while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt += 1
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
@@ -297,10 +296,10 @@ class adam(adjust_optimizer):
             m_cap = m_t/(1-(self.beta_1**eval_cnt))		#calculates the bias-corrected estimates
             v_cap = v_t/(1-(self.beta_2**eval_cnt))		#calculates the bias-corrected estimates
             x_prev = x.clone()								
-            est_df = (m_cap)/(np.sqrt(v_cap)+self.epsilon)
+            est_df = (m_cap)/(torch.sqrt(v_cap)+self.epsilon)
             x -= self.alpha * est_df 	#updates the parameters
             if self.record:
-                stats['arg'].append(x.copy())
+                stats['arg'].append(x.clone())
                 stats['val'].append(obj.func(x))
                 stats['gradient_before_after'].append([g_t, est_df])
             if(np.linalg.norm(x-x_prev) < self.tol):		#checks if it is converged or not
@@ -353,11 +352,11 @@ class line_search(adjust_optimizer):
         stats['arg'] = []
         stats['val'] = []
         if self.record:
-            stats['arg'].append(x.copy())
+            stats['arg'].append(x.clone())
             stats['val'].append(fx)
             stats['gradient'].append(-p)
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.ravel())
+            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze())
         for k in range(self.max_iter):
             while fnx > fx + alpha_ * self.beta * (-p @ p):
                 alpha_ *= tao
@@ -369,11 +368,11 @@ class line_search(adjust_optimizer):
             fnx = obj.func(x + alpha_ * p)
             eval_cnt += 2
             if self.record:
-                stats['arg'].append(x.copy())
+                stats['arg'].append(x.clone())
                 #print(eval_cnt, stats['arg'])
                 stats['val'].append(fx)
                 stats['gradient'].append(-p)
-            if np.linalg.norm(p) < self.tol:
+            if torch.norm(p) < self.tol:
                 break
         stats['evals'] = eval_cnt
         if self.verbose:
