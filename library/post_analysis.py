@@ -8,52 +8,32 @@ import seaborn as sns
 class post_analy1d:
     def __init__(self, stats):
         self.stats = stats
-        self.n = self.stats['val'].shape[0]
-        #self.xs = np.linspace(np.min(self.stats['arg'])-2, np.max(self.stats['arg'])+2, 150)
-        self.trace = stats['trace']
-            
-    def animate_moving_position(self):
-        def animate(i):
-            #plt.clf()
-            ax = fig.add_subplot(1, 1, 1)    
-            ax.set_title('iter=%d' % (i+1))
-            p = sns.scatterplot(x=arg[i], y=val[i], color="red", hue=i,
-                            hue_norm=(0, self.n), s=73,legend=False)
-            plt.plot(self.xs, self.fs, c="green")
+        self.f = stats['func']
+        self.n = stats['val'].shape[0]
+        
+    def plot_position_after_before(self):
         if self.stats['arg'].shape[1] > 1:
             # only leave the first column, the smallest candidate
             arg = self.stats['arg'][:,0]
             val = self.stats['val'][:,0]
         else:
-            arg = self.stats['arg']
-            val = self.stats['val']
+            arg = self.stats['arg'].squeeze()
+            val = self.stats['val'].squeeze()
         fig = plt.figure(figsize=(8,4))
-        ani = animation.FuncAnimation(fig, animate, frames=self.n-1, repeat=False, interval=500)
-        return ani
-    
-    def animate_moving_cluster(self):
-        def animate(i):
-            plt.clf()
-            ax = fig.add_subplot(1, 1, 1)    
-            ax.set_title('iter=%d' % (i+1))
-            ax.set_xlim(np.min(arg), np.max(arg))
-            ax.set_ylim(np.min(val), np.max(val))
-            ax.axvline(self.stats['mean'][i], c='blue', lw=1)
-            ax.axvline(self.stats['mean'][i] - 1 * self.stats['std'][i], c='grey', lw=1)
-            ax.axvline(self.stats['mean'][i] + 1 * self.stats['std'][i], c='grey', lw=1)
-            p = sns.scatterplot(x=arg[i], y=val[i], color="red", hue=i,
-                            hue_norm=(0, self.n), s=73,legend=False)
-            plt.plot(self.xs, self.fs, c="green")
-        arg = self.stats['arg'].squeeze()
-        val = self.stats['val'].squeeze()
-        fig = plt.figure(figsize=(8,4))
-        ani = animation.FuncAnimation(fig, animate, frames=self.n-1, repeat=False, interval=500)
-        return ani
+        ax = fig.add_subplot(1, 1, 1)    
+        
+        p = sns.scatterplot(x=arg, y=val, color="red", hue=np.arange(self.n),
+                            hue_norm=(0, self.n), s=73, legend=False)
+        xs = np.linspace(np.min(arg), np.max(arg), 251)
+        fs = []
+        for x in xs:
+             fs.append(ak_1d.func(torch.tensor(x)).item())
+        plt.plot(xs, fs, c="green")
     
     def plot_grandient_before_after(self):
-        x = np.arange(stats['gradient_before_after'].shape[0]-1)  # the label locations
+        x = np.arange(self.stats['gradient_before_after'].shape[0]-1)  # the label locations
         width = 0.35  # the width of the bars
-        num = stats['gradient_before_after'].shape[2]
+        num = self.stats['gradient_before_after'].shape[2]
 
         fig = plt.figure(figsize=(8, 4*num))
         for i in range(num):
@@ -62,7 +42,7 @@ class post_analy1d:
             ax.plot(x-width/2, self.stats['gradient_before_after'][1:, 0, i], color="b")
 
             # Add some text for labels, title and custom x-axis tick labels, etc.
-            ax.set_ylabel('gradient')
+            ax.set_ylabel('original gradient')
             if i == 0:
                 ax.set_title('gradient before and after adjustment')
             #ax.set_xticks(x)
@@ -74,7 +54,7 @@ class post_analy1d:
             ax = ax.twinx()  
             rects2 = ax.bar(x+width/2, self.stats['gradient_before_after'][1:, 1, i], width, color="y", label='moving averge')
             ax.plot(x+width/2, self.stats['gradient_before_after'][1:, 1, i], color="y")
-            ax.set_ylabel('gradient')
+            ax.set_ylabel('modified gradient')
             #ax.set_xticks(x)
             ax.set_yticks(np.linspace(-1, 1, 11))
             ax.set_ylim(-1.4, 1.4)
@@ -124,8 +104,6 @@ class post_analysis_zone:
         ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")  
         self.__setup_axis(ax)
         return ax
-
-
         
 class post_analysis_single():
     def __init__(self, stats):

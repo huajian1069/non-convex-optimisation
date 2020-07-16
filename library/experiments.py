@@ -35,14 +35,14 @@ class single_experiment:
 
     def do(self):
         optimal, optimum, statistics = self.optimizer.optimise(self.objective_func)
-        if np.linalg.norm(optimal - self.objective_func.get_optimal()) < self.tol \
-        or np.linalg.norm(optimum - self.objective_func.get_optimum()) < self.tol:
+        if torch.norm(optimal - self.objective_func.get_optimal()) < self.tol \
+        or torch.norm(optimum - self.objective_func.get_optimum()) < self.tol:
             statistics['status'] = 'global minimum'
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
         if self.optimizer.verbose:
             print("Result: ", statistics['status'])
-            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.ravel(), statistics['evals']))
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.detach().numpy(), statistics['evals']))
         if self.optimizer.record == False:
             return statistics['status'], optimum, statistics['evals']
         else:
@@ -96,7 +96,7 @@ class multiple_experiment:
                 costs = np.zeros_like(res)
                 evals = np.zeros_like(res)
                 for k in range(self.size):
-                    self.exp.optimizer.x0 = points[k].reshape(2,1)
+                    self.exp.optimizer.x0 = torch.tensor(points[k].reshape(2,1), requires_grad=True)
                     status, costs[k], evals[k] = self.exp.do()
                     if(status == 'global minimum'):
                         res[k] = 1
