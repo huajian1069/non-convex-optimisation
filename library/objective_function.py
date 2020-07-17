@@ -11,18 +11,14 @@ class objective_func(ABC):
     @abstractmethod
     def func(self, x):
         pass
-    #@abstractmethod
     def dfunc(self, x):
         out = self.func(x)
         out.backward()
         return x.grad
-        
-    @abstractmethod
     def get_optimal(self):
-        pass
-    @abstractmethod
+        return self.optimal
     def get_optimum(self):
-        pass
+        return self.optimum
     def visualise1d(self, lim, n):
         ''' 
             lim: the visualisation scope [-lim, lim] in each dimension
@@ -135,10 +131,7 @@ class ackley(objective_func):
         arg2 = torch.cos(2*np.pi*x).mean()
         g = lambda xx: -0.8 * xx / arg1 * torch.exp(arg1) / self.dim + 2 * np.pi * torch.sin(2 * np.pi * xx) * torch.exp(arg2) / self.dim
         return g(x)
-    def get_optimal(self):
-        return self.optimal
-    def get_optimum(self):
-        return self.optimum
+
     
 class bukin():
     '''

@@ -71,12 +71,12 @@ class cma_es(adjust_optimizer):
             return (dis_arg < tol and dis_val < tol) 
 
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze().detach.numpy())
+            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze().detach().numpy())
         # User defined input parameters 
         dim = self.dim
         sigma = 0.3
         D = self.std / sigma
-        self.mean = self.x0.reshape(dim, 1)
+        mean = self.x0.reshape(dim, 1)
         # the size of solutions group
         lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
         # only best "mu" solutions are used to generate iterations
@@ -88,20 +88,20 @@ class cma_es(adjust_optimizer):
 
         # Strategy parameter setting: Adaptation
         # time constant for cumulation for C
-        self.cc = (4 + mueff / dim) / (dim + 4 + 2 * mueff / dim)  
+        cc = (4 + mueff / dim) / (dim + 4 + 2 * mueff / dim)  
         # t-const for cumulation for sigma control
-        self.cs = (mueff + 2) / (dim + mueff + 5)  
+        cs = (mueff + 2) / (dim + mueff + 5)  
         # learning rate for rank-one update of C
-        self.c1 = 2 / ((dim + 1.3)**2 + mueff)    
+        c1 = 2 / ((dim + 1.3)**2 + mueff)    
         # and for rank-mu update
-        self.cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2)**2 + mueff))  
+        cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2)**2 + mueff))  
         # damping for sigma, usually close to 1  
         damps = 1 + 2 * max(0, np.sqrt((mueff - 1)/( dim + 1)) - 1) + cs                                                                 
 
         # Initialize dynamic (internal) strategy parameters and constants
         # evolution paths for C and sigma
-        self.pc = torch.zeros((dim, 1))     
-        self.ps = torch.zeros((dim, 1)) 
+        pc = torch.zeros((dim, 1))     
+        ps = torch.zeros((dim, 1)) 
         # B defines the coordinate system
         B = torch.eye(int(dim))       
         # covariance matrix C
@@ -127,7 +127,7 @@ class cma_es(adjust_optimizer):
         for i in range(lambda_):
             x[i,:] = (mean + torch.randn(dim, 1)).squeeze()
             f[i] = obj.func(x[i])
-        idx = torch.argsort(f)
+        idx = torch.argsort(f.detach())
         x_ascending = x[idx]
         if self.record:
             stats['inner'].append(inner_stats.detach().numpy())
@@ -156,7 +156,7 @@ class cma_es(adjust_optimizer):
                     eval_ += inner_stats[i]['evals']
                     iter_eval[i] = inner_stats[i]['evals']
                 # sort the value and positions of solutions 
-                idx = torch.argsort(f)
+                idx = torch.argsort(f.detach())
                 x_ascending = x[idx]
 
                 # update the parameter for next iteration
