@@ -2,9 +2,7 @@ import numpy as np
 import torch
 from abc import ABC, abstractmethod
 
-import seaborn as sns
-import plotly.graph_objs as go
-import plotly.express as px
+#import seaborn as sns
 import matplotlib.pyplot as plt
 
 class objective_func(ABC):
@@ -29,78 +27,6 @@ class objective_func(ABC):
         for x in xs:
             fs.append(self.func(x))
         plt.plot(xs, fs)
-    def visualise2d(self, lim, n):
-        x, y = np.linspace(-lim, lim, n), np.linspace(-lim, lim, n)
-        xx, yy = np.meshgrid(x, y)
-        zz = np.zeros(xx.shape)
-        for j in range(n):
-            for i in range(n):
-                zz[j, i] = self.func(np.array([x[i], y[j]]))
-        fig = plt.figure(figsize=(4,4))
-        ax = fig.add_subplot(111)
-        sc = ax.scatter(x=xx.ravel(), y=yy.ravel(), c=zz.ravel())
-        ax.scatter(x=[self.optimal[0]], y=[self.optimal[1]], c='red', marker='x')
-        plt.colorbar(sc)
-        fig.show()
-        return ax
-    def visualise3d(self, lim, n):
-        x, y = np.linspace(-lim, lim, n), np.linspace(-lim, lim, n)
-        z = []
-        for i in y:
-            z_line = []
-            for j in x:
-                z_line.append(self.func(np.array([j,i])))
-            z.append(z_line)
-        fig = go.Figure(data=[go.Surface(z=z, x=x, y=y),  \
-                              go.Scatter3d(x=[self.optimal[0]], y=[self.optimal[1]], z=[self.optimum])])
-        fig.update_layout(autosize=False,
-                          scene_camera_eye=dict(x=1.87, y=0.88, z=-0.64),
-                          width=500, height=500,
-                          margin=dict(l=65, r=50, b=65, t=90))
-        fig.show()
-    def visulise_gradient(self, lim, n):
-        x, y = np.linspace(-lim, lim, n), np.linspace(-lim, lim, n)
-        xx, yy = np.meshgrid(x, y)
-        zz = np.zeros((n, n, 2))
-        for j in range(len(y)):
-            for i in range(len(x)):
-                zz[j, i, :] = self.dfunc(np.array([x[i], y[j]]))
-        fig = plt.figure(figsize=(8,8))
-        ax = fig.add_subplot(111)
-        ax.quiver(xx,yy,zz[:,:,0],zz[:,:,1])
-        ax.scatter(x=[self.optimal[0]], y=[self.optimal[1]], c='red', marker='x')
-        fig.show()
-        return ax
-    def visualise2d_section(self, pos, dire):
-        ''' 
-            pos: the position of cross-section
-            dire: along this direction/dimension to get cross-section
-        '''
-        fig = plt.figure(figsize=(4,4))
-        xs = np.linspace(-self.lim, self.lim, 301)
-        fs = []
-        if dire == 'x':
-            for x in xs:
-                fs.append(self.func(np.array([x, pos])))
-        else:
-            for x in xs:
-                fs.append(self.func(np.array([pos, x])))
-        plt.plot(xs, fs)
-        fig.show()
-    def visualize2d_section_gradient(self, pos, dire):
-        fig = plt.figure(figsize=(4,4))
-        xs = np.linspace(-self.lim, self.lim, 300)
-        dfs = []
-        if dire == 'x':
-            for x in xs:
-                dfs.append(self.dfunc(np.array([x, pos])))
-        else:
-            for x in xs:
-                dfs.append(self.dfunc(np.array([pos, x])))
-        dfs = np.array(dfs)
-        plt.plot(xs, dfs[:,0])
-        plt.plot(xs, dfs[:,1])
-        fig.show()
     
 class ackley(objective_func):
     '''
@@ -116,7 +42,7 @@ class ackley(objective_func):
         self.optimum = 0
         self.lim = 5
         self.dim = dim
-        self.optimal = torch.zeros((self.dim, ))
+        self.optimal = torch.zeros((self.dim, ), device=torch.device('cuda:0'))
         self.x = None
         self.out = None
     def func(self, x):

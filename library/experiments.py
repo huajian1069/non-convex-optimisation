@@ -42,7 +42,7 @@ class single_experiment:
             statistics['status'] = 'local minimum'
         if self.optimizer.verbose:
             print("Result: ", statistics['status'])
-            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.detach().numpy(), statistics['evals']))
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.detach(), statistics['evals']))
         if self.optimizer.record == False:
             return statistics['status'], optimum, statistics['evals']
         else:
