@@ -284,11 +284,11 @@ class adam(adjust_optimizer):
         stats['arg'] = []
         stats['val'] = []
         if self.record:
-            stats['arg'].append(x.clone().detach().numpy())
-            stats['val'].append(obj.func(x).detach().numpy())
-            stats['gradient_before_after'].append([obj.dfunc(x).detach().numpy(), obj.dfunc(x).detach().numpy()])
+            stats['arg'].append(x.clone().detach().cpu().numpy())
+            stats['val'].append(obj.func(x).detach().cpu().numpy())
+            stats['gradient_before_after'].append([obj.dfunc(x).detach().cpu().numpy(), obj.dfunc(x).detach().cpu().numpy()])
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().numpy())
+            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze())
         while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt += 1
             x = x.clone().detach().requires_grad_(True)
@@ -302,15 +302,15 @@ class adam(adjust_optimizer):
             with torch.no_grad():
                 x -= self.alpha * est_df 	#updates the parameters
             if self.record:
-                stats['arg'].append(x.clone().detach().numpy())
-                stats['val'].append(obj.func(x).detach().numpy())
-                stats['gradient_before_after'].append([g_t.detach().numpy(), est_df.detach().numpy()])
+                stats['arg'].append(x.clone().detach())
+                stats['val'].append(obj.func(x).detach())
+                stats['gradient_before_after'].append([g_t, est_df])
             if(torch.norm(x-x_prev) < self.tol):		#checks if it is converged or not
                 break
         if self.verbose:
             print('total evaluatios = {}'.format(eval_cnt))
             print('gradient at stop position = {},\nmodified graident = {}'.format(g_t, est_df))
-            print('found minimum position = {}, found minimum = {}'.format(x.detach().numpy(), obj.func(x).detach().numpy()))
+            print('found minimum position = {}, found minimum = {}'.format(x, obj.func(x)))
         stats['arg'] = np.array(stats['arg'])
         stats['val'] = np.array(stats['val'])
         stats['gradient_before_after'] = np.array(stats['gradient_before_after'])

@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.animation as animation
 from matplotlib.patches import Ellipse
 from matplotlib import patches
-import seaborn as sns
+#import seaborn as sns
 
 class post_analy1d:
     def __init__(self, stats):
@@ -22,8 +22,8 @@ class post_analy1d:
         fig = plt.figure(figsize=(8,4))
         ax = fig.add_subplot(1, 1, 1)    
         
-        p = sns.scatterplot(x=arg, y=val, color="red", hue=np.arange(self.n),
-                            hue_norm=(0, self.n), s=73, legend=False)
+        #p = sns.scatterplot(x=arg, y=val, color="red", hue=np.arange(self.n),
+       #                     hue_norm=(0, self.n), s=73, legend=False)
         xs = np.linspace(np.min(arg), np.max(arg), 251)
         fs = []
         for x in xs:
@@ -78,7 +78,7 @@ class post_analysis_zone:
         self.ylabel = np.arange(self.edge[1] + self.origin[1], self.origin[1], -self.step) - round(self.step/2)
         
     def __setup_axis(self, ax):
-        sns.axes_style("white")
+        #sns.axes_style("white")
         ax.set_xticklabels(self.xlabel)
         ax.set_yticklabels(self.ylabel)
         
@@ -89,19 +89,19 @@ class post_analysis_zone:
         
     def plot_hotmap_prob(self):
         #fig = plt.figure(figsize=(13, 13))
-        ax = sns.heatmap(self.prob, mask=self.mask, vmin=0, vmax=1, square=True,  cmap="YlGnBu")
+        #ax = sns.heatmap(self.prob, mask=self.mask, vmin=0, vmax=1, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
         return ax
 
     def plot_hotmap_cost(self, max_cost):
         #fig = plt.figure(figsize=(13, 13))
-        ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, vmax=max_cost, square=True,  cmap="YlGnBu")
+       # ax = sns.heatmap(self.cost, mask=self.mask, vmin=0, vmax=max_cost, square=True,  cmap="YlGnBu")
         self.__setup_axis(ax)
         return ax
 
     def plot_hotmap_evals(self):
         #fig = plt.figure(figsize=(13, 13))
-        ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")  
+        #ax = sns.heatmap(self.evals, mask=self.mask, vmin=0, square=True,  cmap="YlGnBu")  
         self.__setup_axis(ax)
         return ax
         
@@ -124,8 +124,9 @@ class post_analysis_single():
             print('iter=', i, '\nbefore\n', iter_[:2], '\nafter\n', iter_[2:], '\n') 
 
     def __cal_distance(self):
-        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(1,1,2), axis=2).mean(axis=1)
-        self.distance_val = self.stats['val'].mean(axis=1)
+        shape = self.stats['arg'][0].shape
+        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(shape).cpu().numpy(), axis=2).mean(axis=1)
+        self.distance_val = self.stats['val']
             
     def plot_distance(self):
         self.__cal_distance()
@@ -201,7 +202,7 @@ class post_analysis_single():
         max_y = np.max(self.stats['arg'][:,:,1])
         ax.set_xlim(min_x, max_x)
         ax.set_ylim(min_x, max_y)
-        p = sns.scatterplot(x=self.stats['arg'][i,:,0], y=self.stats['arg'][i,:,1], color="r", hue=i, hue_norm=(0, self.stats['val'].shape[0]), legend=False)
+       # p = sns.scatterplot(x=self.stats['arg'][i,:,0], y=self.stats['arg'][i,:,1], color="r", hue=i, hue_norm=(0, self.stats['val'].shape[0]), legend=False)
         # draw ellipse representing 3 sigma areas of normal distribution
         self.__draw_ellipse(ax, self.stats['mean'][i], self.stats['std'][i])
 
