@@ -62,7 +62,7 @@ class cma_es(adjust_optimizer):
         def update_C(C, pc, x, mean_old, sigma):
             hsig = (torch.norm(ps) / torch.sqrt(1 - (1 - cs)**(2 * iter_/lambda_)) / chiN < (1.4 + 2/(dim + 1))).int()
             artmp = (1 / sigma) * (x - mean_old.reshape(1, dim))
-            return (1 - c1 - cmu) * C + c1 * (pc * pc.T + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.T @ torch.diag(weights) @ artmp
+            return (1 - c1 - cmu) * C + c1 * (pc * pc.transpose(1,0) + (1 - hsig) * cc * (2 - cc) * C) + cmu * artmp.transpose(1,0) @ torch.diag(weights) @ artmp
         def update_sigma(sigma, ps):
             return sigma * torch.exp((cs / damps) * (torch.norm(ps)/ chiN - 1))
         def is_not_moving(arg, val, pre_arg, pre_val, tol):
@@ -71,7 +71,7 @@ class cma_es(adjust_optimizer):
             return (dis_arg < tol and dis_val < tol) 
 
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze().detach().numpy())
+            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze().detach().cpu().numpy())
         # User defined input parameters 
         dim = self.dim
         sigma = 0.3
@@ -83,7 +83,7 @@ class cma_es(adjust_optimizer):
         mu = int(lambda_ / 2) if self.survival_size == None else self.survival_size
         # used to combine best "mu" solutions                                               
         weights = np.log(mu + 1/2) - torch.log(torch.arange(mu, dtype=torch.float) + 1) 
-        weights = (weights / torch.sum(weights)).float()    
+        weights = (weights / torch.sum(weights)).cuda()   
         mueff = 1 / torch.sum(weights**2) 
 
         # Strategy parameter setting: Adaptation
@@ -96,37 +96,40 @@ class cma_es(adjust_optimizer):
         # and for rank-mu update
         cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2)**2 + mueff))  
         # damping for sigma, usually close to 1  
-        damps = 1 + 2 * max(0, np.sqrt((mueff - 1)/( dim + 1)) - 1) + cs                                                                 
+        damps = 1 + 2 * max(0, torch.sqrt((mueff - 1)/( dim + 1)) - 1) + cs                                                                 
 
         # Initialize dynamic (internal) strategy parameters and constants
         # evolution paths for C and sigma
-        pc = torch.zeros((dim, 1))     
-        ps = torch.zeros((dim, 1)) 
+        pc = torch.zeros((dim, 1), device=torch.device('cuda:0'))     
+        ps = torch.zeros((dim, 1), device=torch.device('cuda:0')) 
         # B defines the coordinate system
-        B = torch.eye(int(dim))       
+        B = torch.eye(int(dim), device=torch.device('cuda:0'))       
         # covariance matrix C
-        C = B * torch.diag(D**2) * B.T 
+        C = B * torch.diag(D**2) * B.transpose(1, 0)
         # C^-1/2 
-        invsqrtC = B * torch.diag(D**-1) * B.T   
+        invsqrtC = B * torch.diag(D**-1) * B.transpose(1, 0)
         # expectation of ||N(0,I)|| == norm(randn(N,1)) 
         chiN = dim**0.5 * (1 - 1/(4 * dim) + 1 / (21 * dim**2))  
 
         # --------------------  Initialization --------------------------------  
-        x, x_old, f = torch.zeros((lambda_, dim)), torch.zeros((lambda_, dim)), torch.zeros((lambda_,))
+        x, x_old, f = torch.zeros((lambda_, dim), device=torch.device('cuda:0')),  \
+                        torch.zeros((lambda_, dim), device=torch.device('cuda:0')), \
+                        torch.zeros((lambda_,), device=torch.device('cuda:0'))
         stats = {}
         inner_stats = {}
         stats['inner'] = []
         stats['val'], stats['arg'] = [], []
         stats['x_adjust'] = []
-        iter_eval, stats['evals_per_iter'] = torch.zeros((lambda_, )), []
+        iter_eval, stats['evals_per_iter'] = torch.zeros((lambda_,)), []
         inner_stats = [{}] * lambda_
         stats['mean'], stats['std'] = [], []
         stats['status'] = None
         iter_, eval_ = 0, 0
         # initial data in record
         for i in range(lambda_):
-            x[i,:] = (mean + torch.randn(dim, 1)).squeeze()
-            f[i] = obj.func(x[i])
+            x[i,:] = (mean + 0.1 * torch.randn(dim, 1).cuda()).squeeze()
+            #f[i] = obj.func(x[i])
+            f[i] = torch.tensor([10])
         idx = torch.argsort(f.detach())
         x_ascending = x[idx]
         if self.record:
@@ -150,9 +153,10 @@ class cma_es(adjust_optimizer):
                 iter_ += 1
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
-                    x[i] = (mean + sigma * B @ torch.diag(D) @ torch.randn(dim, 1)).squeeze()
+                    x[i] = (mean + sigma * B @ torch.diag(D) @ torch.randn(dim, 1).cuda()).squeeze()
                     x_old[i] = x[i]
-                    x[i], f[i], inner_stats[i] = self.adjust_func.adjust(x[i].clone().detach().requires_grad_(True), obj)
+                    print("candidate: ", x[i])
+                    x[i], f[i], inner_stats[i] = self.adjust_func.adjust(x[i].detach().requires_grad_(True), obj)
                     eval_ += inner_stats[i]['evals']
                     iter_eval[i] = inner_stats[i]['evals']
                 # sort the value and positions of solutions 
@@ -166,11 +170,20 @@ class cma_es(adjust_optimizer):
                 pc =   update_pc(pc, sigma, ps, mean, mean_old)
                 sigma = update_sigma(sigma, ps)
                 C =    update_C(C, pc, x_ascending[:mu], mean_old, sigma)
-                C = torch.triu(C) + torch.triu(C, 1).T
+                C = torch.triu(C) + torch.triu(C, 1).transpose(1,0)
                 D, B = torch.eig(C, eigenvectors=True)
                 D = torch.sqrt(D[:,0])
-                invsqrtC = B @ torch.diag(D**-1) @ B
-
+                invsqrtC = B @ torch.diag(D**-1) @ B.transpose(1,0)
+                arg = x_ascending
+                val = f[idx]
+                if self.verbose:
+                    print("iter: ", iter_)
+                    print("loss: ", val[0].item())
+                    print("latent: ", x_ascending[0].detach().cpu().numpy())
+                    #print("mean: ", mean)
+                    #print("sigma: ", sigma)
+                    #print("std: ", D)
+                    print("\n")
                 # record data during process for post analysis
                 if self.record:
                     stats['inner'].append(inner_stats.clone().detach().numpy())
@@ -180,9 +193,7 @@ class cma_es(adjust_optimizer):
                     stats['std'].append((sigma * B @ np.diag(D)).detach().numpy())
                     stats['evals_per_iter'].append(iter_eval.clone().detach().numpy())
                     stats['x_adjust'].append(np.vstack((x_old.T.clone().detach().numpy(), x.T.clone().detach().numpy())))
-                # stopping condition    
-                arg = x_ascending
-                val = f[idx]
+                # stopping condition  
                 if best_val > val[0]:
                     best_val = val[0]
                     best_arg = arg[0]              
@@ -229,7 +240,7 @@ class do_nothing(adjust_optimizer):
         self.record = paras['record']
     def optimise(self, obj):
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().numpy())
+            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().cpu().numpy())
         return self.x0, obj.func(self.x0), self.stats
     
 class round_off(adjust_optimizer):
@@ -246,7 +257,7 @@ class round_off(adjust_optimizer):
         self.record = paras['record']
     def optimise(self, obj):
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().numpy())
+            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().cpu().numpy())
         return np.round(self.x0), obj.func(self.x0), self.stats
     
 class adam(adjust_optimizer):
@@ -285,13 +296,14 @@ class adam(adjust_optimizer):
         stats['val'] = []
         if self.record:
             stats['arg'].append(x.clone().detach().cpu().numpy())
-            stats['val'].append(obj.func(x).detach().cpu().numpy())
-            stats['gradient_before_after'].append([obj.dfunc(x).detach().cpu().numpy(), obj.dfunc(x).detach().cpu().numpy()])
+            stats['val'].append(obj.func(x).item())
+            stats['gradient_before_after'].append([obj.dfunc(x).detach().cpu().numpy(), np.ones(max(x.shape))])
         if self.verbose:
             print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze())
         while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt += 1
-            x = x.clone().detach().requires_grad_(True)
+            x = x.detach().requires_grad_(True)
+            loss = obj.func(x)
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
             m_t = self.beta_1*m_t + (1-self.beta_1)*g_t	#updates the moving averages of the gradient
             v_t = self.beta_2*v_t + (1-self.beta_2)*(g_t*g_t)	#updates the moving averages of the squared gradient
@@ -301,9 +313,13 @@ class adam(adjust_optimizer):
             est_df = (m_cap)/(torch.sqrt(v_cap)+self.epsilon)
             with torch.no_grad():
                 x -= self.alpha * est_df 	#updates the parameters
+            #if self.verbose:
+            #    print("iter: ", eval_cnt)
+            #    print("loss: ", loss.item())
+            #    print("\n")
             if self.record:
-                stats['arg'].append(x.clone().detach())
-                stats['val'].append(obj.func(x).detach())
+                stats['arg'].append(x.clone().detach().cpu().numpy())
+                stats['val'].append(loss.item())
                 stats['gradient_before_after'].append([g_t, est_df])
             if(torch.norm(x-x_prev) < self.tol):		#checks if it is converged or not
                 break

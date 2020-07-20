@@ -100,3 +100,25 @@ def convert_sdf_samples_to_mesh(
 
     # return mesh
     return mesh_points, faces
+
+def write_verts_faces_to_file(verts, faces, ply_filename_out):
+
+    num_verts = verts.shape[0]
+    num_faces = faces.shape[0]
+
+    verts_tuple = np.zeros((num_verts,), dtype=[("x", "f4"), ("y", "f4"), ("z", "f4")])
+
+    for i in range(0, num_verts):
+        verts_tuple[i] = tuple(verts[i, :])
+
+    faces_building = []
+    for i in range(0, num_faces):
+        faces_building.append(((faces[i, :].tolist(),)))
+    faces_tuple = np.array(faces_building, dtype=[("vertex_indices", "i4", (3,))])
+
+    el_verts = plyfile.PlyElement.describe(verts_tuple, "vertex")
+    el_faces = plyfile.PlyElement.describe(faces_tuple, "face")
+
+    ply_data = plyfile.PlyData([el_verts, el_faces])
+    logging.debug("saving mesh to %s" % (ply_filename_out))
+    ply_data.write(ply_filename_out)
