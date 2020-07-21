@@ -40,11 +40,13 @@ class single_experiment:
             statistics['status'] = 'global minimum'
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
+        print("distance domain, codomain: ", torch.norm(optimal - self.objective_func.get_optimal())
+             , torch.norm(optimum - self.objective_func.get_optimum()))
         if self.optimizer.verbose:
             print("Result: ", statistics['status'])
             print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.detach(), statistics['evals']))
         if self.optimizer.record == False:
-            return statistics['status'], optimum, statistics['evals']
+            return statistics['status'], optimum, optimal, statistics['evals']
         else:
             statistics['optimal'] = self.objective_func.get_optimal()
             statistics['optimum'] = self.objective_func.get_optimum()
@@ -97,7 +99,7 @@ class multiple_experiment:
                 evals = np.zeros_like(res)
                 for k in range(self.size):
                     self.exp.optimizer.x0 = torch.tensor(points[k].reshape(2,1), requires_grad=True)
-                    status, costs[k], evals[k] = self.exp.do()
+                    status, costs[k], _, evals[k] = self.exp.do()
                     if(status == 'global minimum'):
                         res[k] = 1
                 data['convergence'][num_y-1-j, i] = np.mean(res)

@@ -125,9 +125,12 @@ class post_analysis_single():
 
     def __cal_distance(self):
         shape = self.stats['arg'][0].shape
-        self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(shape).cpu().numpy(), axis=2).mean(axis=1)
-        self.distance_val = self.stats['val']
-            
+        if(len(shape) == 1):
+            self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(shape).cpu().numpy(), axis=2).mean(axis=1)
+            self.distance_val = self.stats['val']
+        else:
+            self.distance_arg = np.linalg.norm(stats['arg'] - stats['optimal'].cpu().numpy(), axis=(1,2))
+            self.distance_val = np.linalg.norm(stats['val'], axis=1)
     def plot_distance(self):
         self.__cal_distance()
         fig = plt.figure(figsize=(8, 4))
@@ -158,9 +161,9 @@ class post_analysis_single():
                 ax.set_title("%d / %d"%(int(unit * (row * i + j)), self.stats['arg'].shape[0]))
 
     def __plot_distance_common(self, ax1, i):
-        ax1.plot(np.arange(i), self.distance_arg[1:i+1], color='green', label='Frobenius norm \nof parameters')
+        ax1.plot(np.arange(i), self.distance_arg[1:i+1], color='green', label='L2 norm \nof parameters')
         ax1.set_xlim(0, self.stats['val'].shape[0])
-        ax1.set_ylim(np.min(self.distance_arg)*0.9, np.max(self.distance_arg)*1.1)
+        ax1.set_ylim(np.min(self.distance_arg[1:])*0.9, np.max(self.distance_arg[1:])*1.1)
         ax1.set_xlabel('iteration', fontsize=15)
         ax1.set_ylabel('distance in domain', color='green', fontsize=15)
         ax1.tick_params(axis='y', labelcolor='green')
@@ -168,7 +171,7 @@ class post_analysis_single():
 
         ax2 = ax1.twinx()  
         ax2.plot(np.arange(i), self.distance_val[1:i+1], color='red', label='L2 norm \nof func value')
-        ax2.set_ylim(np.min(self.distance_val)*0.9, np.max(self.distance_val)*1.1)
+        ax2.set_ylim(np.min(self.distance_val[1:])*0.9, np.max(self.distance_val[1:])*1.1)
         ax2.set_ylabel('distance in codomain', color='red', fontsize=15)
         ax2.tick_params(axis='y', labelcolor='red')
         ax2.legend(loc='upper right') 

@@ -76,7 +76,7 @@ class cma_es(adjust_optimizer):
         dim = self.dim
         sigma = 0.3
         D = self.std / sigma
-        mean = self.x0.reshape(dim, 1)
+        mean = self.x0.reshape(dim, 1).detach()
         # the size of solutions group
         lambda_ = 4 + int(3 * np.log(dim)) if self.cluster_size == None else self.cluster_size  
         # only best "mu" solutions are used to generate iterations
@@ -96,7 +96,8 @@ class cma_es(adjust_optimizer):
         # and for rank-mu update
         cmu = min(1 - c1, 2 * (mueff - 2 + 1 / mueff) / ((dim + 2)**2 + mueff))  
         # damping for sigma, usually close to 1  
-        damps = 1 + 2 * max(0, torch.sqrt((mueff - 1)/( dim + 1)) - 1) + cs                                                                 
+        damps = 1 + 2 * max(0, torch.sqrt((mueff - 1)/( dim + 1)) - 1) + cs     
+
 
         # Initialize dynamic (internal) strategy parameters and constants
         # evolution paths for C and sigma
@@ -112,7 +113,7 @@ class cma_es(adjust_optimizer):
         chiN = dim**0.5 * (1 - 1/(4 * dim) + 1 / (21 * dim**2))  
 
         # --------------------  Initialization --------------------------------  
-        x, x_old, f = torch.zeros((lambda_, dim), device=torch.device('cuda:0')),  \
+        x, x_old, fs = torch.zeros((lambda_, dim), device=torch.device('cuda:0')),  \
                         torch.zeros((lambda_, dim), device=torch.device('cuda:0')), \
                         torch.zeros((lambda_,), device=torch.device('cuda:0'))
         stats = {}
@@ -127,25 +128,27 @@ class cma_es(adjust_optimizer):
         iter_, eval_ = 0, 0
         # initial data in record
         for i in range(lambda_):
-            x[i,:] = (mean + 0.1 * torch.randn(dim, 1).cuda()).squeeze()
+            cand = (mean + 0.1 * torch.randn(dim, 1).cuda()).squeeze()
             #f[i] = obj.func(x[i])
-            f[i] = torch.tensor([10])
-        idx = torch.argsort(f.detach())
+            fs[i] = torch.tensor([10])
+            x[i] = cand
+            x_old[i] = cand
+        idx = torch.argsort(fs)
         x_ascending = x[idx]
         if self.record:
-            stats['inner'].append(inner_stats.detach().numpy())
-            stats['arg'].append(x_ascending.detach().numpy())
-            stats['val'].append(f[idx].detach().numpy())
-            stats['mean'].append(mean.detach().numpy())
-            stats['std'].append(sigma * B @ torch.diag(D))
-            stats['evals_per_iter'].append(torch.ones((lambda_,)).detach().numpy())
-            stats['x_adjust'].append(np.vstack((x.T.clone().detach().numpy(), x.T.clone().detach().numpy())))
+            stats['inner'].append(inner_stats)
+            stats['arg'].append(x_ascending.cpu().numpy())
+            stats['val'].append(fs[idx].cpu().numpy())
+            stats['mean'].append(mean.cpu().numpy())
+            stats['std'].append((sigma * B @ torch.diag(D)).cpu().numpy())
+            stats['evals_per_iter'].append(torch.ones((lambda_,)).cpu().numpy())
+            stats['x_adjust'].append(np.vstack((x_old[idx].transpose(1,0).cpu().numpy(), x[idx].transpose(1,0).cpu().numpy())))
         arg = x_ascending
-        val = f[idx]
+        val = fs[idx]
         pre_arg = x_ascending
-        pre_val = f[idx]
-        best_val = 1e4
-        best_arg = None
+        pre_val = fs[idx]
+        best_val = fs[0] + 1e2
+        best_arg = x[0,:]
         
         # optimise by iterations
         try:
@@ -153,46 +156,53 @@ class cma_es(adjust_optimizer):
                 iter_ += 1
                 # generate candidate solutions with some stochastic elements
                 for i in range(lambda_):
-                    x[i] = (mean + sigma * B @ torch.diag(D) @ torch.randn(dim, 1).cuda()).squeeze()
-                    x_old[i] = x[i]
-                    print("candidate: ", x[i])
-                    x[i], f[i], inner_stats[i] = self.adjust_func.adjust(x[i].detach().requires_grad_(True), obj)
+                    candidate_old = (mean + sigma * B @ torch.diag(D) @ torch.randn(dim, 1).cuda()).squeeze()
+                    #print("candidate: ", candidate_old, candidate_old.requires_grad)
+                    #ad.x0 = candidate_old.requires_grad_(True)
+                    #candidate_new, val, inner_stats[i] = ad.optimise(obj)
+                    candidate_new, val, inner_stats[i] = self.adjust_func.adjust(candidate_old.requires_grad_(True), obj)
+                    x[i] = candidate_new.detach()
+                    x_old[i] = candidate_old.detach()
+                    fs[i] = val.detach()
+                    #print("grad? ", x[i].requires_grad, x_old[i].requires_grad, fs[i].requires_grad, B.requires_grad, D.requires_grad)
                     eval_ += inner_stats[i]['evals']
                     iter_eval[i] = inner_stats[i]['evals']
-                # sort the value and positions of solutions 
-                idx = torch.argsort(f.detach())
+               # sort the value and positions of solutions 
+                idx = torch.argsort(fs)
                 x_ascending = x[idx]
 
                 # update the parameter for next iteration
                 mean_old = mean
                 mean = update_mean(x_ascending[:mu])
+                # print("mean old and new: ", mean_old, mean)
                 ps =   update_ps(ps, sigma, C, mean, mean_old)
                 pc =   update_pc(pc, sigma, ps, mean, mean_old)
                 sigma = update_sigma(sigma, ps)
+                
                 C =    update_C(C, pc, x_ascending[:mu], mean_old, sigma)
-                C = torch.triu(C) + torch.triu(C, 1).transpose(1,0)
+                C = (torch.triu(C) + torch.triu(C, 1).transpose(1,0))
                 D, B = torch.eig(C, eigenvectors=True)
                 D = torch.sqrt(D[:,0])
                 invsqrtC = B @ torch.diag(D**-1) @ B.transpose(1,0)
                 arg = x_ascending
-                val = f[idx]
+                val = fs[idx]
                 if self.verbose:
                     print("iter: ", iter_)
                     print("loss: ", val[0].item())
-                    print("latent: ", x_ascending[0].detach().cpu().numpy())
+                    print("latent: ", x_ascending[0].cpu().numpy())
                     #print("mean: ", mean)
                     #print("sigma: ", sigma)
                     #print("std: ", D)
                     print("\n")
                 # record data during process for post analysis
                 if self.record:
-                    stats['inner'].append(inner_stats.clone().detach().numpy())
-                    stats['arg'].append(x_ascending.detach().numpy())
-                    stats['val'].append(f[idx].detach().numpy())
-                    stats['mean'].append(mean.detach().numpy())
-                    stats['std'].append((sigma * B @ np.diag(D)).detach().numpy())
-                    stats['evals_per_iter'].append(iter_eval.clone().detach().numpy())
-                    stats['x_adjust'].append(np.vstack((x_old.T.clone().detach().numpy(), x.T.clone().detach().numpy())))
+                    stats['inner'].append(inner_stats)
+                    stats['arg'].append(x_ascending.cpu().numpy())
+                    stats['val'].append(fs[idx].cpu().numpy())
+                    stats['mean'].append(mean.cpu().numpy())
+                    stats['std'].append((sigma * B @ torch.diag(D)).cpu().numpy())
+                    stats['evals_per_iter'].append(iter_eval.clone().cpu().numpy())
+                    stats['x_adjust'].append(np.vstack((x.transpose(1,0).cpu().numpy(), x_old.transpose(1,0).cpu().numpy())))
                 # stopping condition  
                 if best_val > val[0]:
                     best_val = val[0]
@@ -213,7 +223,7 @@ class cma_es(adjust_optimizer):
             if self.verbose:
                 print('eigenvalue of variance = {}'.format(D))
                 print('total iterations = {}, total evaluatios = {}'.format(iter_, eval_))
-                print('found minimum position = {}, found minimum = {}'.format(best_arg.detach().numpy(), best_val.detach().numpy()))
+                print('found minimum position = {}, found minimum = {}'.format(best_arg.detach().cpu().numpy(), best_val.detach().cpu().numpy()))
 
         # carry statistics info before quit
         if self.record:
