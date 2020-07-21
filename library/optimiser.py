@@ -160,7 +160,16 @@ class cma_es(adjust_optimizer):
                     #print("candidate: ", candidate_old, candidate_old.requires_grad)
                     #ad.x0 = candidate_old.requires_grad_(True)
                     #candidate_new, val, inner_stats[i] = ad.optimise(obj)
-                    candidate_new, val, inner_stats[i] = self.adjust_func.adjust(candidate_old.requires_grad_(True), obj)
+                    try:
+                        candidate_new, val, inner_stats[i] = self.adjust_func.adjust(candidate_old.requires_grad_(True), obj)
+                    except ValueError as err:
+                        print(str(err))
+                        if str(err) == "Surface level must be within volume data range.":
+                            candidate_new = candidate_old
+                            val = best_val + 5
+                            inner_stats[i] = {'evals': 10}
+                        else:
+                            raise(str(err))
                     x[i] = candidate_new.detach()
                     x_old[i] = candidate_old.detach()
                     fs[i] = val.detach()
@@ -306,12 +315,12 @@ class adam(adjust_optimizer):
         stats['val'] = []
         if self.record:
             stats['arg'].append(x.clone().detach().cpu().numpy())
-            stats['val'].append(obj.func(x).item())
-            stats['gradient_before_after'].append([obj.dfunc(x).detach().cpu().numpy(), np.ones(max(x.shape))])
+            stats['val'].append(10)
+            stats['gradient_before_after'].append([np.ones(max(x.shape)), np.ones(max(x.shape))])
         if self.verbose:
             print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze())
         while eval_cnt < self.max_iter:					#till it gets converged
-            eval_cnt += 1
+            eval_cnt += 2
             x = x.detach().requires_grad_(True)
             loss = obj.func(x)
             g_t = obj.dfunc(x)		#computes the gradient of the stochastic function
@@ -368,7 +377,7 @@ class line_search(adjust_optimizer):
         @param beta: control the armijo condition
         @return x: point position after moving to local minimum
         '''
-        x = self.x0
+        x = self.x0.detach().squeeze().requires_grad_(True)
         alpha_ = self.alpha
         tao = 0.5
         fx = obj.func(x)
@@ -380,13 +389,16 @@ class line_search(adjust_optimizer):
         stats['gradient'] = []
         stats['arg'] = []
         stats['val'] = []
-        if self.record:
-            stats['arg'].append(x.clone().detach().numpy())
-            stats['val'].append(fx.detach().numpy())
-            stats['gradient'].append(-p.detach().numpy())
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().numpy())
+            print("at begining, loss: ", fx.item(), fnx.item())
+        if self.record:
+            stats['arg'].append(x.clone().detach().cpu().numpy())
+            stats['val'].append(fx.detach().cpu().numpy())
+            stats['gradient'].append(-p.cpu().numpy())
+        if self.verbose:
+            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().cpu().numpy())
         for k in range(self.max_iter):
+            #alpha_ = self.alpha
             while fnx > fx + alpha_ * self.beta * (-p @ p):
                 alpha_ *= tao
                 fnx = obj.func(x + alpha_ * p)
@@ -394,22 +406,27 @@ class line_search(adjust_optimizer):
             with torch.no_grad():
                 x += alpha_ * p
             fx = fnx
-            x = x.clone().detach().requires_grad_(True)
+            x = x.detach().requires_grad_(True)
             p = -obj.dfunc(x)
             fnx = obj.func(x + alpha_ * p)
             eval_cnt += 2
+            if self.verbose:
+                print("iter: ", k)
+                print("loss: ", fnx.item())
+                print("stepsize: ", alpha_)
+                print("\n")
             if self.record:
-                stats['arg'].append(x.clone().detach().numpy())
+                stats['arg'].append(x.clone().detach().cpu().numpy())
                 #print(eval_cnt, stats['arg'])
-                stats['val'].append(fx.detach().numpy())
-                stats['gradient'].append(-p.detach().numpy())
-            if torch.norm(p) < self.tol:
+                stats['val'].append(fx.detach().cpu().numpy())
+                stats['gradient'].append(-p.detach().cpu().numpy())
+            if torch.norm(p) < self.tol or torch.norm(fnx - fx) < 1e-3:
                 break
         stats['evals'] = eval_cnt
         if self.verbose:
             print('total evaluatios = {}'.format(eval_cnt))
-            print('gradient at stop position = {}'.format(-p.detach().numpy()))
-            print('found minimum position = {}, found minimum = {}'.format(x.detach().numpy(), fx.detach().numpy()))
+            print('gradient at stop position = {}'.format(-p.detach().cpu().numpy()))
+            print('found minimum position = {}, found minimum = {}'.format(x.detach().cpu().numpy(), fx.detach().cpu().numpy()))
         stats['arg'] = np.array(stats['arg'])
         stats['val'] = np.array(stats['val'])
         stats['gradient'] = np.array(stats['gradient'])

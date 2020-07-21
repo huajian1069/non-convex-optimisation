@@ -124,13 +124,13 @@ class post_analysis_single():
             print('iter=', i, '\nbefore\n', iter_[:2], '\nafter\n', iter_[2:], '\n') 
 
     def __cal_distance(self):
-        shape = self.stats['arg'][0].shape
-        if(len(shape) == 1):
-            self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].reshape(shape).cpu().numpy(), axis=2).mean(axis=1)
+        shape = self.stats['val'][0].shape
+        if(len(shape) == 0):
             self.distance_val = self.stats['val']
+            self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].cpu().numpy(), axis=1)
         else:
-            self.distance_arg = np.linalg.norm(stats['arg'] - stats['optimal'].cpu().numpy(), axis=(1,2))
-            self.distance_val = np.linalg.norm(stats['val'], axis=1)
+            self.distance_val = np.linalg.norm(self.stats['val'], axis=1)
+            self.distance_arg = np.linalg.norm(self.stats['arg'] - self.stats['optimal'].cpu().numpy(), axis=(1,2))
     def plot_distance(self):
         self.__cal_distance()
         fig = plt.figure(figsize=(8, 4))

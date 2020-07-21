@@ -50,6 +50,8 @@ class single_experiment:
         else:
             statistics['optimal'] = self.objective_func.get_optimal()
             statistics['optimum'] = self.objective_func.get_optimum()
+            statistics['found_optimal'] = optimal
+            statistics['found_optimum'] = optimum
             return statistics
             
 class multiple_experiment:
