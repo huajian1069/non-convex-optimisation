@@ -217,7 +217,7 @@ class cma_es(adjust_optimizer):
                     best_val = val[0]
                     best_arg = arg[0]              
                 # check the stop condition
-                if torch.max(D) > (torch.min(D) * 1e6):
+                if torch.max(D) > (torch.min(D) * 1e4):
                     stats['status'] = 'diverge'
                     print('diverge, concentrate in low dimension manifold')
                     break
@@ -389,8 +389,6 @@ class line_search(adjust_optimizer):
         stats['gradient'] = []
         stats['arg'] = []
         stats['val'] = []
-        if self.verbose:
-            print("at begining, loss: ", fx.item(), fnx.item())
         if self.record:
             stats['arg'].append(x.clone().detach().cpu().numpy())
             stats['val'].append(fx.detach().cpu().numpy())
@@ -412,7 +410,9 @@ class line_search(adjust_optimizer):
             eval_cnt += 2
             if self.verbose:
                 print("iter: ", k)
-                print("loss: ", fnx.item())
+                print("x: ", x)
+                print("loss: ", fx.item(), fnx.item())
+                print("gradient: ", p)
                 print("stepsize: ", alpha_)
                 print("\n")
             if self.record:
@@ -420,6 +420,8 @@ class line_search(adjust_optimizer):
                 #print(eval_cnt, stats['arg'])
                 stats['val'].append(fx.detach().cpu().numpy())
                 stats['gradient'].append(-p.detach().cpu().numpy())
+            if torch.isnan(p.sum()):
+                break
             if torch.norm(p) < self.tol or torch.norm(fnx - fx) < 1e-3:
                 break
         stats['evals'] = eval_cnt

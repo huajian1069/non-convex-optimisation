@@ -35,16 +35,17 @@ class single_experiment:
 
     def do(self):
         optimal, optimum, statistics = self.optimizer.optimise(self.objective_func)
-        if torch.norm(optimal - self.objective_func.get_optimal()) < self.tol \
-        or torch.norm(optimum - self.objective_func.get_optimum()) < self.tol:
+        dist_arg = np.linalg.norm(optimal.detach().cpu().numpy() - self.objective_func.get_optimal())
+        dist_val = np.linalg.norm(optimum.detach().cpu().numpy() - self.objective_func.get_optimum())
+        if  dist_arg < self.tol \
+        or  dist_val < self.tol:
             statistics['status'] = 'global minimum'
         elif statistics['status'] != 'diverge':
             statistics['status'] = 'local minimum'
-        print("distance domain, codomain: ", torch.norm(optimal - self.objective_func.get_optimal())
-             , torch.norm(optimum - self.objective_func.get_optimum()))
+        print("distance domain, codomain: ", dist_arg, dist_val)
         if self.optimizer.verbose:
             print("Result: ", statistics['status'])
-            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal.detach(), statistics['evals']))
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal, statistics['evals']))
         if self.optimizer.record == False:
             return statistics['status'], optimum, optimal, statistics['evals']
         else:

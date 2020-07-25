@@ -41,7 +41,7 @@ class decoder_obj(objective_func):
         self.latent_target = latent_target
         self.decoder = decoder
         self.optimum = 0
-        self.optimal = latent_target
+        self.optimal = latent_target.detach().cpu().numpy()
         
         # Get a mesh representation of the target shape
         self.verts_target, faces_target = create_mesh_optim(
@@ -99,9 +99,9 @@ class decoder_obj(objective_func):
         latent.grad.zero_()
         dL_ds_i_fast = -torch.matmul(dL_dx_i.unsqueeze(1), normals.unsqueeze(-1)).squeeze(-1)
         loss_backward = torch.sum(dL_ds_i_fast * pred_sdf)
-        if l2reg and self.iter % 20 == 0 and self.iter > 0:
+        if self.l2reg and self.iter % 20 == 0 and self.iter > 0:
             self.regl2 = self.regl2/2
-        if l2reg:
+        if self.l2reg:
             loss_backward += self.regl2 * torch.mean(latent.pow(2))
         # Backpropagate
         loss_backward.backward()
@@ -218,7 +218,6 @@ def write_verts_faces_to_file(verts, faces, ply_filename_out):
     el_faces = plyfile.PlyElement.describe(faces_tuple, "face")
 
     ply_data = plyfile.PlyData([el_verts, el_faces])
-    logging.debug("saving mesh to %s" % (ply_filename_out))
     ply_data.write(ply_filename_out)
     
 def decode_sdf(decoder, latent_vector, queries):
@@ -268,7 +267,7 @@ class ackley(objective_func):
         self.optimum = 0
         self.lim = 5
         self.dim = dim
-        self.optimal = torch.zeros((self.dim, ), device=torch.device('cuda:0'))
+        self.optimal = np.zeros((self.dim, ))
         self.x = None
         self.out = None
     def func(self, x):
@@ -285,7 +284,7 @@ class ackley(objective_func):
         return g(x)
 
     
-class bukin():
+class bukin(objective_func):
     '''
     non-disappearing gradient
     large gradient and uncontinuous gradient around ridge/local optimal
@@ -312,7 +311,7 @@ class bukin():
 class eggholder(objective_func):
     # evaluated domain: 
     def __init__(self):
-        self.optimal = torch.tensor([522, 413])
+        self.optimal = np.array([522, 413])
         self.optimum = 0
         self.lim = 550
     def func(self, x):
@@ -339,13 +338,13 @@ class eggholder(objective_func):
     def get_optimum(self):
         return self.optimum
     
-class tuned_ackley():
+class tuned_ackley(objective_func):
     # evaluated domain: circle with radius 19
     def __init__(self, lim=22, dim=2):
         self.optimum = 0
         self.lim = lim
         self.dim = dim
-        self.optimal = torch.zeros((self.dim, ))
+        self.optimal = np.zeros((self.dim, ))
     def func(self, x):
         '''
         the period of local minimum along each axis is 1, integer coordinate (1,1), (2,3)... 
