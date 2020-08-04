@@ -71,7 +71,7 @@ class cma_es(adjust_optimizer):
             return (dis_arg < tol and dis_val < tol) 
 
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial mean: ", self.x0.squeeze().detach().cpu().numpy())
+            print("\n\n*******starting optimisation from intitial mean: ", torch.norm(self.x0).detach().cpu().numpy())
         # User defined input parameters 
         dim = self.dim
         sigma = 0.3
@@ -259,7 +259,7 @@ class do_nothing(adjust_optimizer):
         self.record = paras['record']
     def optimise(self, obj):
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().cpu().numpy())
+            print("\n*******starting optimisation from intitial point: ", torch.norm(self.x0).detach().cpu().numpy())
         return self.x0, obj.func(self.x0), self.stats
     
 class round_off(adjust_optimizer):
@@ -318,7 +318,7 @@ class adam(adjust_optimizer):
             stats['val'].append(10)
             stats['gradient_before_after'].append([np.ones(max(x.shape)), np.ones(max(x.shape))])
         if self.verbose:
-            print("\n\n*******starting optimisation from intitial point: ", self.x0.squeeze())
+            print("\n\n*******starting optimisation from intitial point: ", torch.norm(self.x0).detach().cpu().numpy())
         while eval_cnt < self.max_iter:					#till it gets converged
             eval_cnt += 2
             x = x.detach().requires_grad_(True)
@@ -344,8 +344,8 @@ class adam(adjust_optimizer):
                 break
         if self.verbose:
             print('total evaluatios = {}'.format(eval_cnt))
-            print('gradient at stop position = {},\nmodified graident = {}'.format(g_t, est_df))
-            print('found minimum position = {}, found minimum = {}'.format(x, obj.func(x)))
+            print('gradient at stop position = {},\nmodified graident = {}'.format(torch.norm(g_t).item(), torch.norm(est_df).item()))
+            print('found minimum position = {}, found minimum = {}'.format(torch.norm(x).item(), loss))
         stats['arg'] = np.array(stats['arg'])
         stats['val'] = np.array(stats['val'])
         stats['gradient_before_after'] = np.array(stats['gradient_before_after'])
@@ -394,7 +394,7 @@ class line_search(adjust_optimizer):
             stats['val'].append(fx.detach().cpu().numpy())
             stats['gradient'].append(-p.cpu().numpy())
         if self.verbose:
-            print("\n*******starting optimisation from intitial point: ", self.x0.squeeze().detach().cpu().numpy())
+            print("\n*******starting optimisation from intitial point: ", torch.norm(self.x0).detach().cpu().numpy())
         for k in range(self.max_iter):
             #alpha_ = self.alpha
             while fnx > fx + alpha_ * self.beta * (-p @ p):

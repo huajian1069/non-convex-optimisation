@@ -45,7 +45,7 @@ class single_experiment:
         print("distance domain, codomain: ", dist_arg, dist_val)
         if self.optimizer.verbose:
             print("Result: ", statistics['status'])
-            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, optimal, statistics['evals']))
+            print("found minimum: {}, minimum position: {}, evals: {}".format(optimum, torch.norm(optimal).item(), statistics['evals']))
         if self.optimizer.record == False:
             return statistics['status'], optimum, optimal, statistics['evals']
         else:
