@@ -437,7 +437,7 @@ class eggholder(objective_func):
         f1 = (x[1] + 47) * g(arg1)
         f2 = x[0] * g(arg2)
         return torch.tensor([-f1/2 - torch.sin(torch.sqrt(torch.abs(arg2))) - f2, \
-                         -f1 - torch.sin(torch.sqrt(torch.abs(arg1))) + f2])
+                         -f1 - torch.sin(torch.sqrt(torch.abs(arg1))) + f2]).cuda()
     def get_optimal(self):
         return self.optimal
     def get_optimum(self):
