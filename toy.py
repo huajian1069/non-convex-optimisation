@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 x = torch.rand(10)
 x = x.cuda()
-print(2*x)
+#print(2*x)
 
 print(torch.__version__)
 print(torch.cuda.is_available())
