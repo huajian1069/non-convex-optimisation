@@ -339,7 +339,7 @@ class adam(adjust_optimizer):
             if self.record:
                 stats['arg'].append(x.clone().detach().cpu().numpy())
                 stats['val'].append(loss.item())
-                stats['gradient_before_after'].append([g_t, est_df])
+                #stats['gradient_before_after'].append([g_t, est_df])
             if(torch.norm(x-x_prev) < self.tol):		#checks if it is converged or not
                 break
         if self.verbose:
@@ -348,7 +348,7 @@ class adam(adjust_optimizer):
             print('found minimum position = {}, found minimum = {}'.format(torch.norm(x).item(), loss))
         stats['arg'] = np.array(stats['arg'])
         stats['val'] = np.array(stats['val'])
-        stats['gradient_before_after'] = np.array(stats['gradient_before_after'])
+        #stats['gradient_before_after'] = np.array(stats['gradient_before_after'])
         stats['evals'] = eval_cnt
         return x, obj.func(x), stats
     
