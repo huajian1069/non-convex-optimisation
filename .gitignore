@@ -5,3 +5,5 @@ data/*
 data_for_this_experiments/*
 Experiments/*
 Expirements/*
+*.ply
+*.npy
