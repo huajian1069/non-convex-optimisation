@@ -7,3 +7,5 @@ Experiments/*
 Expirements/*
 *.ply
 *.npy
+cma_sgd_cont/*
+

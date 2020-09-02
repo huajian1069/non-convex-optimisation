@@ -35,8 +35,8 @@ class single_experiment:
 
     def do(self):
         optimal, optimum, statistics = self.optimizer.optimise(self.objective_func)
-        dist_arg = np.linalg.norm(optimal.detach().cpu().numpy() - self.objective_func.get_optimal())
-        dist_val = np.linalg.norm(optimum.detach().cpu().numpy() - self.objective_func.get_optimum())
+        #dist_arg = np.linalg.norm(optimal.detach().cpu().numpy() - self.objective_func.get_optimal())
+        #dist_val = np.linalg.norm(optimum.detach().cpu().numpy() - self.objective_func.get_optimum())
         if  dist_arg < self.tol \
         or  dist_val < self.tol:
             statistics['status'] = 'global minimum'
