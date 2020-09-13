@@ -79,5 +79,5 @@ My most recent experiments are made in [cuda0Run.ipynb](cuda0Run.ipynb). Please 
 3. Convex Optimization – Boyd and Vandenberghe [https://web.stanford.edu/~boyd/cvxbook/]
 4. MeshSDF: Differentiable Iso-Surface Extraction [https://arxiv.org/abs/2006.03997]
 5. [Reports_Semester_Project_CVlab.pdf](report/Reports_Semester_Project_CVlab.pdf)
-6. [Reports_Summer_Internship_CVlab.pdf](report/Reports_Semester_Project_CVlab.pdf)
+6. [Reports_Summer_Internship_CVlab.pdf](report/Reports_Summer_Internship_CVlab.pdf)
 
