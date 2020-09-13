@@ -71,7 +71,9 @@ while i < 30:
     es.disp(1)
     i += 1
 ```
-My most recent experiments are made in [cuda0Run.ipynb](cuda0Run.ipynb). Please refer it for the definitions of functions used in above code snippets.
+My most recent experiments are done in [cuda0Run.ipynb](cuda0Run.ipynb). 
+Please refer it for the definitions of functions used in above code snippets.
+Most recent visualisation and post analysis are done in [exploreLatentSpace.ipynb](exploreLatentSpace.ipynb)
 ## Reference
 
 1. CMA-ES [https://en.wikipedia.org/wiki/CMA-ES]
